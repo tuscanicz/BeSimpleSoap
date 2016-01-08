@@ -1,7 +1,7 @@
 {
-    "name": "besimple/soap",
+    "name": "catch-of-the-day/soap",
     "type": "library",
-    "description": "Build and consume SOAP and WSDL based web services",
+    "description": "A fork of the abandoned besimple/soap package with added support for Symfony 3.0",
     "keywords": ["soap"],
     "homepage": "http://besim.pl",
     "license": "MIT",
