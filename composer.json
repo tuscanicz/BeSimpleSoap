@@ -2,8 +2,7 @@
     "name": "tuscanicz/soap",
     "type": "library",
     "description": "A fork of the abandoned besimple/soap package with added support for Symfony 3.0",
-    "keywords": ["soap"],
-    "homepage": "http://besim.pl",
+    "keywords": ["soap", "soap server", "soap client"],
     "license": "MIT",
     "authors": [
         {
@@ -17,6 +16,10 @@
         {
             "name": "Andreas Schamberger",
             "email": "mail@andreass.net"
+        },
+        {
+            "name": "Petr Bechyně",
+            "email": "petr.bechyne@vodafone.com"
         }
     ],
     "require": {
@@ -46,7 +49,7 @@
     },
     "extra": {
         "branch-alias": {
-            "dev-master": "0.3-dev"
+            "dev-master": "0.4-dev"
         }
     }
 }
