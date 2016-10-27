@@ -1,5 +1,5 @@
 {
-    "name": "catch-of-the-day/soap",
+    "name": "tuscanicz/soap",
     "type": "library",
     "description": "A fork of the abandoned besimple/soap package with added support for Symfony 3.0",
     "keywords": ["soap"],

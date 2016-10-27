@@ -19,7 +19,7 @@ class TypeConverterCollection
 {
     private $converters = array();
 
-    public function all()
+    public function getAll()
     {
         return array_values($this->converters);
     }
@@ -58,7 +58,7 @@ class TypeConverterCollection
 
     public function addCollection(TypeConverterCollection $converterCollection)
     {
-        foreach ($converterCollection->all() as $converter) {
+        foreach ($converterCollection->getAll() as $converter) {
             $this->add($converter);
         }
     }

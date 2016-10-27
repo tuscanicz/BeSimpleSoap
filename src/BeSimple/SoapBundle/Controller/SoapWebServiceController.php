@@ -141,8 +141,8 @@ class SoapWebServiceController implements ContainerAwareInterface
             $request->query->remove('_besimple_soap_fault');
         }
 
-        $server = SoapServerBuilder::createWithDefaults()
-            ->withWsdl(__DIR__.'/../Handler/wsdl/exception.wsdl')
+        $server = SoapServerBuilder::createWithDefaults(__DIR__.'/../Handler/wsdl/exception.wsdl')
+            ->withWsdl()
             ->withWsdlCacheNone()
             ->withHandler($handler)
             ->build()

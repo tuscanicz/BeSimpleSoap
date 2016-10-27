@@ -30,12 +30,12 @@ class TypeConverterCollectionTest extends \PHPUnit_Framework_TestCase
         $dateTimeTypeConverter = new DateTimeTypeConverter();
         $converters->add($dateTimeTypeConverter);
 
-        $this->assertSame(array($dateTimeTypeConverter), $converters->all());
+        $this->assertSame(array($dateTimeTypeConverter), $converters->getAll());
 
         $dateTypeConverter = new DateTypeConverter();
         $converters->add($dateTypeConverter);
 
-        $this->assertSame(array($dateTimeTypeConverter, $dateTypeConverter), $converters->all());
+        $this->assertSame(array($dateTimeTypeConverter, $dateTypeConverter), $converters->getAll());
     }
 
     public function testGetTypemap()
@@ -73,7 +73,7 @@ class TypeConverterCollectionTest extends \PHPUnit_Framework_TestCase
         $converter = array(new DateTypeConverter);
         $converters->set($converter);
 
-        $this->assertSame($converter, $converters->all());
+        $this->assertSame($converter, $converters->getAll());
     }
 
     public function testAddCollection()
@@ -85,7 +85,7 @@ class TypeConverterCollectionTest extends \PHPUnit_Framework_TestCase
         $converters2->add($dateTimeTypeConverter);
         $converters1->addCollection($converters2);
 
-        $this->assertSame(array($dateTimeTypeConverter), $converters1->all());
+        $this->assertSame(array($dateTimeTypeConverter), $converters1->getAll());
 
         $this->setExpectedException('InvalidArgumentException');
         $converters1->addCollection($converters2);

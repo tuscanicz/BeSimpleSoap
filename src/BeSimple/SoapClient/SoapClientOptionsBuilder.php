@@ -21,13 +21,15 @@ use BeSimple\SoapCommon\SoapOptions\SoapOptions;
  * @author Christian Kerl <christian-kerl@web.de>
  * @author Petr Bechyně <petr.bechyne@vodafone.com>
  */
-class SoapClientBuilder
+class SoapClientOptionsBuilder
 {
-    public function build(SoapClientOptions $soapClientOptions, SoapOptions $soapOptions)
+    public static function createWithDefaults()
     {
-        return new SoapClient(
-            $soapClientOptions,
-            $soapOptions
+        return new SoapClientOptions(
+            SoapClientOptions::SOAP_CLIENT_TRACE_OFF,
+            SoapClientOptions::SOAP_CLIENT_EXCEPTIONS_ON,
+            'BeSimpleSoap',
+            SoapClientOptions::SOAP_CLIENT_COMPRESSION_NONE
         );
     }
 }

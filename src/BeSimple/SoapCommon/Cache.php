@@ -25,16 +25,21 @@ class Cache
     const TYPE_MEMORY      = WSDL_CACHE_MEMORY;
     const TYPE_DISK_MEMORY = WSDL_CACHE_BOTH;
 
-    static protected $types = array(
+    static protected $types = [
         self::TYPE_NONE,
         self::TYPE_DISK,
         self::TYPE_MEMORY,
         self::TYPE_DISK_MEMORY,
-    );
+    ];
 
     static public function getTypes()
     {
         return self::$types;
+    }
+
+    static public function hasType($cacheType)
+    {
+        return in_array($cacheType, self::$types);
     }
 
     static public function isEnabled()

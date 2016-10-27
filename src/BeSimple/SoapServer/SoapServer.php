@@ -12,73 +12,67 @@
 
 namespace BeSimple\SoapServer;
 
-use BeSimple\SoapCommon\Helper;
+use BeSimple\SoapCommon\SoapOptions\SoapOptions;
+use BeSimple\SoapCommon\SoapRequest;
+use BeSimple\SoapServer\SoapOptions\SoapServerOptions;
 use BeSimple\SoapCommon\Converter\MtomTypeConverter;
 use BeSimple\SoapCommon\Converter\SwaTypeConverter;
+use Exception;
 
 /**
  * Extended SoapServer that allows adding filters for SwA, MTOM, ... .
  *
  * @author Andreas Schamberger <mail@andreass.net>
  * @author Christian Kerl <christian-kerl@web.de>
+ * @author Petr Bechyně <petr.bechyne@vodafone.com>
  */
 class SoapServer extends \SoapServer
 {
-    /**
-     * Soap version.
-     *
-     * @var int
-     */
-    protected $soapVersion = SOAP_1_1;
+    const SOAP_SERVER_REQUEST_FAILED = false;
 
-    /**
-     * Soap kernel.
-     *
-     * @var \BeSimple\SoapServer\SoapKernel
-     */
-    protected $soapKernel = null;
+    protected $soapVersion;
+    protected $soapKernel;
 
     /**
      * Constructor.
      *
-     * @param string               $wsdl    WSDL file
-     * @param array(string=>mixed) $options Options array
+     * @param SoapServerOptions $soapServerOptions
+     * @param SoapOptions $soapOptions
      */
-    public function __construct($wsdl, array $options = array())
+    public function __construct(SoapServerOptions $soapServerOptions, SoapOptions $soapOptions)
     {
-        // store SOAP version
-        if (isset($options['soap_version'])) {
-            $this->soapVersion = $options['soap_version'];
+        if ($soapOptions->hasAttachments()) {
+            $soapOptions = $this->configureMime($soapOptions);
         }
-        // create soap kernel instance
+
         $this->soapKernel = new SoapKernel();
-        // set up type converter and mime filter
-        $this->configureMime($options);
-        // we want the exceptions option to be set
-        $options['exceptions'] = true;
-        parent::__construct($wsdl, $options);
+        $this->soapVersion = $soapOptions->getSoapVersion();
+
+        parent::__construct(
+            $soapOptions->getWsdlFile(),
+            $soapServerOptions->toArray() + $soapOptions->toArray()
+        );
     }
 
     /**
      * Custom handle method to be able to modify the SOAP messages.
      *
      * @param string $request Request string
+     * @return string
      */
     public function handle($request = null)
     {
-        // wrap request data in SoapRequest object
-        $soapRequest = SoapRequest::create($request, $this->soapVersion);
+        $soapRequest = SoapRequestFactory::create($request, $this->soapVersion);
 
-        // handle actual SOAP request
         try {
-            $soapResponse = $this->handle2($soapRequest);
+            $soapResponse = $this->handleSoapRequest($soapRequest);
         } catch (\SoapFault $fault) {
-            // issue an error to the client
             $this->fault($fault->faultcode, $fault->faultstring);
+
+            return self::SOAP_SERVER_REQUEST_FAILED;
         }
 
-        // send SOAP response to client
-        $soapResponse->send();
+        return $soapResponse->getResponseContent();
     }
 
     /**
@@ -90,12 +84,11 @@ class SoapServer extends \SoapServer
      *
      * @return SoapResponse
      */
-    public function handle2(SoapRequest $soapRequest)
+    private function handleSoapRequest(SoapRequest $soapRequest)
     {
         // run SoapKernel on SoapRequest
         $this->soapKernel->filterRequest($soapRequest);
 
-        // call parent \SoapServer->handle() and buffer output
         ob_start();
         parent::handle($soapRequest->getContent());
         $response = ob_get_clean();
@@ -128,43 +121,25 @@ class SoapServer extends \SoapServer
         return $this->soapKernel;
     }
 
-    /**
-     * Configure filter and type converter for SwA/MTOM.
-     *
-     * @param array &$options SOAP constructor options array.
-     *
-     * @return void
-     */
-    private function configureMime(array &$options)
+    private function configureMime(SoapOptions $soapOptions)
     {
-        if (isset($options['attachment_type']) && Helper::ATTACHMENTS_TYPE_BASE64 !== $options['attachment_type']) {
-            // register mime filter in SoapKernel
-            $mimeFilter = new MimeFilter($options['attachment_type']);
+        if ($soapOptions->getAttachmentType() !== SoapOptions::SOAP_ATTACHMENTS_TYPE_BASE64) {
+            $mimeFilter = new MimeFilter($soapOptions->getAttachmentType());
             $this->soapKernel->registerFilter($mimeFilter);
-            // configure type converter
-            if (Helper::ATTACHMENTS_TYPE_SWA === $options['attachment_type']) {
+            if ($soapOptions->getAttachmentType() === SoapOptions::SOAP_ATTACHMENTS_TYPE_SWA) {
                 $converter = new SwaTypeConverter();
                 $converter->setKernel($this->soapKernel);
-            } elseif (Helper::ATTACHMENTS_TYPE_MTOM === $options['attachment_type']) {
-                $xmlMimeFilter = new XmlMimeFilter($options['attachment_type']);
-                $this->soapKernel->registerFilter($xmlMimeFilter);
+                $soapOptions->getTypeConverterCollection()->add($converter);
+            } elseif ($soapOptions->getAttachmentType() === SoapOptions::SOAP_ATTACHMENTS_TYPE_MTOM) {
+                $this->soapKernel->registerFilter(new XmlMimeFilter($soapOptions->getAttachmentType()));
                 $converter = new MtomTypeConverter();
                 $converter->setKernel($this->soapKernel);
+                $soapOptions->getTypeConverterCollection()->add($converter);
+            } else {
+                throw new Exception('Unresolved SOAP_ATTACHMENTS_TYPE: ' . $soapOptions->getAttachmentType());
             }
-            // configure typemap
-            if (!isset($options['typemap'])) {
-                $options['typemap'] = array();
-            }
-            $options['typemap'][] = array(
-                'type_name' => $converter->getTypeName(),
-                'type_ns'   => $converter->getTypeNamespace(),
-                'from_xml'  => function($input) use ($converter) {
-                    return $converter->convertXmlToPhp($input);
-                },
-                'to_xml'    => function($input) use ($converter) {
-                    return $converter->convertPhpToXml($input);
-                },
-            );
         }
+
+        return $soapOptions;
     }
 }

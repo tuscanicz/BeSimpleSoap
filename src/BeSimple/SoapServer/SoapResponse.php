@@ -29,10 +29,11 @@ class SoapResponse extends CommonSoapResponse
      * @param string $location Location
      * @param string $action   SOAP action
      * @param string $version  SOAP version
+     * @param array $attachments SOAP attachments
      *
-     * @return BeSimple\SoapClient\SoapResponse
+     * @return SoapResponse
      */
-    public static function create($content, $location, $action, $version)
+    public static function create($content, $location, $action, $version, $attachments = [])
     {
         $response = new SoapResponse();
         $response->setContent($content);
@@ -48,12 +49,11 @@ class SoapResponse extends CommonSoapResponse
     /**
      * Send SOAP response to client.
      */
-    public function send()
+    public function getResponseContent()
     {
         // set Content-Type header
-        header('Content-Type: '.$this->getContentType());
+        header('Content-Type: ' . $this->getContentType());
 
-        // send content to client
-        echo $this->getContent();
+        return $this->getContent();
     }
 }

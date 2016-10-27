@@ -114,7 +114,7 @@ class SoapClientBuilderTest extends \PHPUnit_Framework_TestCase
 
     public function testCreateWithDefaults()
     {
-        $builder = SoapClientBuilder::createWithDefaults();
+        $builder = SoapClientBuilder::createClientWithDefaults();
 
         $this->assertInstanceOf('BeSimple\SoapClient\SoapClientBuilder', $builder);
 

@@ -15,27 +15,29 @@ namespace BeSimple\SoapCommon;
 /**
  * @author Francis Besset <francis.besset@gmail.com>
  */
-class Classmap
+class ClassMap
 {
-    /**
-     * @var array
-     */
-    protected $classmap = array();
+    protected $classMap;
 
+    public function __construct(array $classMap = [])
+    {
+        $this->classmap = [];
+        foreach ($classMap as $type => $className) {
+            $this->add($type, $className);
+        }
+    }
 
     /**
      * @return array
      */
-    public function all()
+    public function getAll()
     {
-        return $this->classmap;
+        return $this->classMap;
     }
 
     /**
      * @param string $type
-     *
      * @return string
-     *
      * @throws \InvalidArgumentException
      */
     public function get($type)
@@ -44,39 +46,25 @@ class Classmap
             throw new \InvalidArgumentException(sprintf('The type "%s" does not exists', $type));
         }
 
-        return $this->classmap[$type];
+        return $this->classMap[$type];
     }
 
     /**
      * @param string $type
-     * @param string $classname
-     *
+     * @param string $className
      * @throws \InvalidArgumentException
      */
-    public function add($type, $classname)
+    public function add($type, $className)
     {
         if ($this->has($type)) {
             throw new \InvalidArgumentException(sprintf('The type "%s" already exists', $type));
         }
 
-        $this->classmap[$type] = $classname;
-    }
-
-    /**
-     * @param array $classmap
-     */
-    public function set(array $classmap)
-    {
-        $this->classmap = array();
-
-        foreach ($classmap as $type => $classname) {
-            $this->add($type, $classname);
-        }
+        $this->classMap[$type] = $className;
     }
 
     /**
      * @param string $type
-     *
      * @return boolean
      */
     public function has($type)
@@ -84,10 +72,10 @@ class Classmap
         return isset($this->classmap[$type]);
     }
 
-    public function addClassmap(Classmap $classmap)
+    public function addClassMap(ClassMap $classMap)
     {
-        foreach ($classmap->all() as $type => $classname) {
-            $this->add($type, $classname);
+        foreach ($classMap->getAll() as $type => $className) {
+            $this->add($type, $className);
         }
     }
 }

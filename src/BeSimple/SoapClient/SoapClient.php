@@ -15,7 +15,8 @@ namespace BeSimple\SoapClient;
 use BeSimple\SoapCommon\Helper;
 use BeSimple\SoapCommon\Converter\MtomTypeConverter;
 use BeSimple\SoapCommon\Converter\SwaTypeConverter;
-use BeSimple\SoapCommon\SoapMessage;
+use BeSimple\SoapCommon\SoapOptions\SoapOptions;
+use BeSimple\SoapCommon\SoapRequest;
 
 /**
  * Extended SoapClient that uses a a cURL wrapper for all underlying HTTP
@@ -27,12 +28,7 @@ use BeSimple\SoapCommon\SoapMessage;
  */
 class SoapClient extends \SoapClient
 {
-    /**
-     * Soap version.
-     *
-     * @var int
-     */
-    protected $soapVersion = SOAP_1_1;
+    protected $soapVersion;
 
     /**
      * Tracing enabled?
@@ -86,37 +82,24 @@ class SoapClient extends \SoapClient
     /**
      * Constructor.
      *
-     * @param string               $wsdl    WSDL file
-     * @param array(string=>mixed) $options Options array
+     * @param SoapClientOptions $soapClientOptions
+     * @param  SoapOptions $soapOptions
      */
-    public function __construct($wsdl, array $options = array())
+    public function __construct(SoapClientOptions $soapClientOptions, SoapOptions $soapOptions)
     {
-        // tracing enabled: store last request/response header and body
-        if (isset($options['trace']) && $options['trace'] === true) {
-            $this->tracingEnabled = true;
-        }
-        // store SOAP version
-        if (isset($options['soap_version'])) {
-            $this->soapVersion = $options['soap_version'];
-        }
-
-        $this->curl = new Curl($options);
-
-        if (isset($options['extra_options'])) {
-            unset($options['extra_options']);
-        }
-
-        $wsdlFile = $this->loadWsdl($wsdl, $options);
-        // TODO $wsdlHandler = new WsdlHandler($wsdlFile, $this->soapVersion);
         $this->soapKernel = new SoapKernel();
-        // set up type converter and mime filter
-        $this->configureMime($options);
-        // we want the exceptions option to be set
-        $options['exceptions'] = true;
-        // disable obsolete trace option for native SoapClient as we need to do our own tracing anyways
-        $options['trace'] = false;
-        // disable WSDL caching as we handle WSDL caching for remote URLs ourself
-        $options['cache_wsdl'] = WSDL_CACHE_NONE;
+        $this->soapVersion = $soapOptions->getSoapVersion();
+        $this->tracingEnabled = $soapClientOptions->getTrace();
+
+        // @todo: refactor SoapClient: do not use $options as array
+        $options = $this->configureMime($soapOptions->toArray());
+
+        // @todo: refactor SoapClient: do not use $options as array
+        $this->curl = new Curl($soapClientOptions->toArray());
+
+        // @todo: refactor SoapClient: do not use $options as array
+        $wsdlFile = $this->loadWsdl($soapOptions->getWsdlFile(), $soapOptions->toArray());
+
         parent::__construct($wsdlFile, $options);
     }
 
@@ -191,6 +174,7 @@ class SoapClient extends \SoapClient
      * Custom request method to be able to modify the SOAP messages.
      * $oneWay parameter is not used at the moment.
      *
+     * @todo: refactor SoapClient: refactoring starts from here
      * @param string $request  Request string
      * @param string $location Location
      * @param string $action   SOAP action
@@ -308,16 +292,9 @@ class SoapClient extends \SoapClient
         return $this->soapKernel;
     }
 
-    /**
-    * Configure filter and type converter for SwA/MTOM.
-    *
-    * @param array &$options SOAP constructor options array.
-    *
-    * @return void
-    */
-    private function configureMime(array &$options)
+    private function configureMime(array $options)
     {
-        if (isset($options['attachment_type']) && Helper::ATTACHMENTS_TYPE_BASE64 !== $options['attachment_type']) {
+        if (Helper::ATTACHMENTS_TYPE_BASE64 !== $options['attachment_type']) {
             // register mime filter in SoapKernel
             $mimeFilter = new MimeFilter($options['attachment_type']);
             $this->soapKernel->registerFilter($mimeFilter);
@@ -346,6 +323,8 @@ class SoapClient extends \SoapClient
                 },
             );
         }
+
+        return $options;
     }
 
     /**

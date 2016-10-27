@@ -50,6 +50,7 @@ class Curl
     /**
      * Constructor.
      *
+     * @todo: do not use options as Array
      * @param array $options                    Options array from SoapClient constructor
      * @param int   $followLocationMaxRedirects Redirection limit for Location header
      */

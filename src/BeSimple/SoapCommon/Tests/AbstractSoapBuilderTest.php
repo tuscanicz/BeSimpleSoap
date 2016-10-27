@@ -177,7 +177,7 @@ class AbstractSoapBuilderTest extends \PHPUnit_Framework_TestCase
 
         $this->assertEquals(1, count($options['classmap']));
 
-        $classmap = new Classmap();
+        $classmap = new ClassMap();
         $classmap->add('bar', __CLASS__);
         $builder->withClassmap($classmap);
         $options = $builder->getSoapOptions();
