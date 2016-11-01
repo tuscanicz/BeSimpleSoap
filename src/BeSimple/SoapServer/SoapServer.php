@@ -12,7 +12,7 @@
 
 namespace BeSimple\SoapServer;
 
-use BeSimple\SoapCommon\SoapMessage;
+use BeSimple\SoapCommon\SoapKernel;
 use BeSimple\SoapCommon\SoapOptions\SoapOptions;
 use BeSimple\SoapCommon\SoapRequest;
 use BeSimple\SoapCommon\SoapRequestFactory;
@@ -34,6 +34,8 @@ class SoapServer extends \SoapServer
 
     protected $soapVersion;
     protected $soapKernel;
+    protected $soapServerOptions;
+    protected $soapOptions;
 
     /**
      * Constructor.
@@ -44,11 +46,13 @@ class SoapServer extends \SoapServer
     public function __construct(SoapServerOptions $soapServerOptions, SoapOptions $soapOptions)
     {
         if ($soapOptions->hasAttachments()) {
-            $soapOptions = $this->configureMime($soapOptions);
+            $soapOptions = $this->configureTypeConverters($soapOptions);
         }
 
         $this->soapKernel = new SoapKernel();
         $this->soapVersion = $soapOptions->getSoapVersion();
+        $this->soapServerOptions = $soapServerOptions;
+        $this->soapOptions = $soapOptions;
 
         parent::__construct(
             $soapOptions->getWsdlFile(),
@@ -95,8 +99,9 @@ class SoapServer extends \SoapServer
      */
     private function handleSoapRequest(SoapRequest $soapRequest)
     {
-        // run SoapKernel on SoapRequest
-        $this->soapKernel->filterRequest($soapRequest);
+        if ($this->soapOptions->hasAttachments()) {
+            $soapRequest = $this->soapKernel->filterRequest($soapRequest, $this->getFilters());
+        }
 
         ob_start();
         parent::handle($soapRequest->getContent());
@@ -114,41 +119,38 @@ class SoapServer extends \SoapServer
             $soapRequest->getVersion()
         );
 
-        // run SoapKernel on SoapResponse
-        $this->soapKernel->filterResponse($soapResponse);
+        if ($this->soapOptions->hasAttachments()) {
+            $this->soapKernel->filterResponse($soapResponse, $this->getFilters());
+        }
 
         return $soapResponse;
     }
 
-    /**
-     * Get SoapKernel instance.
-     *
-     * @return \BeSimple\SoapServer\SoapKernel
-     */
-    public function getSoapKernel()
-    {
-        return $this->soapKernel;
-    }
-
-    private function configureMime(SoapOptions $soapOptions)
+    private function configureTypeConverters(SoapOptions $soapOptions)
     {
         if ($soapOptions->getAttachmentType() !== SoapOptions::SOAP_ATTACHMENTS_TYPE_BASE64) {
-            $mimeFilter = new MimeFilter($soapOptions->getAttachmentType());
-            $this->soapKernel->registerFilter($mimeFilter);
             if ($soapOptions->getAttachmentType() === SoapOptions::SOAP_ATTACHMENTS_TYPE_SWA) {
-                $converter = new SwaTypeConverter();
-                $converter->setKernel($this->soapKernel);
-                $soapOptions->getTypeConverterCollection()->add($converter);
+                $soapOptions->getTypeConverterCollection()->add(new SwaTypeConverter());
             } elseif ($soapOptions->getAttachmentType() === SoapOptions::SOAP_ATTACHMENTS_TYPE_MTOM) {
-                $this->soapKernel->registerFilter(new XmlMimeFilter($soapOptions->getAttachmentType()));
-                $converter = new MtomTypeConverter();
-                $converter->setKernel($this->soapKernel);
-                $soapOptions->getTypeConverterCollection()->add($converter);
+                $soapOptions->getTypeConverterCollection()->add(new MtomTypeConverter());
             } else {
                 throw new Exception('Unresolved SOAP_ATTACHMENTS_TYPE: ' . $soapOptions->getAttachmentType());
             }
         }
 
         return $soapOptions;
+    }
+
+    private function getFilters()
+    {
+        $filters = [];
+        if ($this->soapOptions->getAttachmentType() !== SoapOptions::SOAP_ATTACHMENTS_TYPE_BASE64) {
+            $filters[] = new MimeFilter($this->soapOptions->getAttachmentType());
+        }
+        if ($this->soapOptions->getAttachmentType() === SoapOptions::SOAP_ATTACHMENTS_TYPE_MTOM) {
+            $filters[] = new XmlMimeFilter($this->soapOptions->getAttachmentType());
+        }
+
+        return $filters;
     }
 }

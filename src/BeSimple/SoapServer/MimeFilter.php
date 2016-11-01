@@ -53,25 +53,17 @@ class MimeFilter implements SoapRequestFilter, SoapResponseFilter
         $this->attachmentType = Helper::ATTACHMENTS_TYPE_SWA;
     }
 
-    /**
-     * Modify the given request XML.
-     *
-     * @param \BeSimple\SoapCommon\SoapRequest $request SOAP request
-     *
-     * @return void
-     */
     public function filterRequest(SoapRequest $request)
     {
-        // array to store attachments
-        $attachmentsRecieved = array();
+        $attachmentsReceived = [];
 
         // check content type if it is a multipart mime message
         $requestContentType = $request->getContentType();
-        if (false !== stripos($requestContentType, 'multipart/related')) {
+        if (stripos($requestContentType, 'multipart/related') !== false) {
             // parse mime message
-            $headers = array(
+            $headers = [
                 'Content-Type' => trim($requestContentType),
-            );
+            ];
             $multipart = MimeParser::parseMimeMessage($request->getContent(), $headers);
             // get soap payload and update SoapResponse object
             $soapPart = $multipart->getPart();
@@ -83,29 +75,20 @@ class MimeFilter implements SoapRequestFilter, SoapResponseFilter
             // store attachments
             $attachments = $multipart->getParts(false);
             foreach ($attachments as $cid => $attachment) {
-                $attachmentsRecieved[$cid] = $attachment;
+                $attachmentsReceived[$cid] = $attachment;
             }
         }
 
-        // add attachments to response object
-        if (count($attachmentsRecieved) > 0) {
-            $request->setAttachments($attachmentsRecieved);
+        if (count($attachmentsReceived) > 0) {
+            $request->setAttachments($attachmentsReceived);
         }
+
+        return $request;
     }
 
-    /**
-     * Modify the given response XML.
-     *
-     * @param \BeSimple\SoapCommon\SoapResponse $response SOAP response
-     *
-     * @return void
-     */
     public function filterResponse(SoapResponse $response)
     {
-        // get attachments from request object
         $attachmentsToSend = $response->getAttachments();
-
-        // build mime message if we have attachments
         if (count($attachmentsToSend) > 0) {
             $multipart = new MimeMultiPart();
             $soapPart = new MimePart($response->getContent(), 'text/xml', 'utf-8', MimePart::ENCODING_EIGHT_BIT);
@@ -134,5 +117,7 @@ class MimeFilter implements SoapRequestFilter, SoapResponseFilter
 
             $response->setContentType($contentType);
         }
+
+        return $response;
     }
 }

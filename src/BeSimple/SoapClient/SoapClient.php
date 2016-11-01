@@ -295,6 +295,7 @@ class SoapClient extends \SoapClient
 
     private function configureMime(array $options)
     {
+        // @todo: PBe: refactor same as SoapServer
         if (Helper::ATTACHMENTS_TYPE_BASE64 !== $options['attachment_type']) {
             // register mime filter in SoapKernel
             $mimeFilter = new MimeFilter($options['attachment_type']);

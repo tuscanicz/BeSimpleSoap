@@ -1,43 +1,32 @@
 <?php
 
-/*
- * This file is part of the BeSimpleSoapCommon.
- *
- * (c) Christian Kerl <christian-kerl@web.de>
- * (c) Francis Besset <francis.besset@gmail.com>
- * (c) Andreas Schamberger <mail@andreass.net>
- *
- * This source file is subject to the MIT license that is bundled
- * with this source code in the file LICENSE.
- */
-
 namespace BeSimple\SoapServer;
 
-use BeSimple\SoapCommon\SoapKernel as CommonSoapKernel;
-use BeSimple\SoapCommon\SoapRequest as CommonSoapRequest;
-use BeSimple\SoapCommon\SoapResponse as CommonSoapResponse;
+use BeSimple\SoapCommon\SoapKernel;
+use BeSimple\SoapCommon\SoapRequest;
 
 /**
  * SoapKernel for Server.
  *
+ * @todo-critical: kill this shit
  * @author Andreas Schamberger <mail@andreass.net>
  */
-class SoapKernel extends CommonSoapKernel
+class SoapServerKernel extends SoapKernel
 {
     /**
      * {@inheritDoc}
      */
-    public function filterRequest(CommonSoapRequest $request)
+    public function filterRequest(SoapRequest $request, array $filters)
     {
-        parent::filterRequest($request);
+        parent::filterRequest($request, $filters);
 
-        $this->attachments = $request->getAttachments();
+        // attachments are now gone from here
     }
 
     /**
      * {@inheritDoc}
      */
-    public function filterResponse(CommonSoapResponse $response)
+    public function filterResponse(SoapResponse $response)
     {
         $response->setAttachments($this->attachments);
         $this->attachments = array();

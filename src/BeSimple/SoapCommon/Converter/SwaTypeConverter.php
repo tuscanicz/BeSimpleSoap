@@ -1,34 +1,16 @@
 <?php
 
-/*
- * This file is part of the BeSimpleSoapClient.
- *
- * (c) Christian Kerl <christian-kerl@web.de>
- * (c) Francis Besset <francis.besset@gmail.com>
- *
- * This source file is subject to the MIT license that is bundled
- * with this source code in the file LICENSE.
- */
-
 namespace BeSimple\SoapCommon\Converter;
 
 use BeSimple\SoapCommon\Mime\Part as MimePart;
-use BeSimple\SoapCommon\SoapKernel;
-use BeSimple\SoapCommon\Converter\SoapKernelAwareInterface;
-use BeSimple\SoapCommon\Converter\TypeConverterInterface;
 
 /**
  * SwA type converter.
  *
  * @author Andreas Schamberger <mail@andreass.net>
  */
-class SwaTypeConverter implements TypeConverterInterface, SoapKernelAwareInterface
+class SwaTypeConverter implements TypeConverterInterface
 {
-    /**
-    * @var \BeSimple\SoapCommon\SoapKernel $soapKernel SoapKernel instance
-    */
-    protected $soapKernel = null;
-
     /**
      * {@inheritDoc}
      */
@@ -60,6 +42,7 @@ class SwaTypeConverter implements TypeConverterInterface, SoapKernelAwareInterfa
         if ('cid:' === substr($ref, 0, 4)) {
             $contentId = urldecode(substr($ref, 4));
 
+            // @todo-critical: ci je nyni zodpovednost vygetovat attachmenty
             if (null !== ($part = $this->soapKernel->getAttachment($contentId))) {
 
                 return $part->getContent();
@@ -80,16 +63,9 @@ class SwaTypeConverter implements TypeConverterInterface, SoapKernelAwareInterfa
         $part = new MimePart($data);
         $contentId = trim($part->getHeader('Content-ID'), '<>');
 
-        $this->soapKernel->addAttachment($part);
+        // @todo-critical: ci je nyni zodpovednost nastrkat attachmenty
+        //$this->soapKernel->addAttachment($part);
 
         return sprintf('<%s href="%s"/>', $this->getTypeName(), 'cid:' . $contentId);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function setKernel(SoapKernel $soapKernel)
-    {
-        $this->soapKernel = $soapKernel;
     }
 }
