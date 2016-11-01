@@ -17,6 +17,7 @@ use BeSimple\SoapCommon\Converter\MtomTypeConverter;
 use BeSimple\SoapCommon\Converter\SwaTypeConverter;
 use BeSimple\SoapCommon\SoapOptions\SoapOptions;
 use BeSimple\SoapCommon\SoapRequest;
+use BeSimple\SoapCommon\SoapRequestFactory;
 
 /**
  * Extended SoapClient that uses a a cURL wrapper for all underlying HTTP
@@ -186,7 +187,7 @@ class SoapClient extends \SoapClient
     public function __doRequest($request, $location, $action, $version, $oneWay = 0)
     {
         // wrap request data in SoapRequest object
-        $soapRequest = SoapRequest::create($request, $location, $action, $version);
+        $soapRequest = SoapRequestFactory::create($location, $action, $version, $request);
 
         // do actual SOAP request
         $soapResponse = $this->__doRequest2($soapRequest);

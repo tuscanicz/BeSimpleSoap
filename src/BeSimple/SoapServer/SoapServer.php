@@ -12,8 +12,10 @@
 
 namespace BeSimple\SoapServer;
 
+use BeSimple\SoapCommon\SoapMessage;
 use BeSimple\SoapCommon\SoapOptions\SoapOptions;
 use BeSimple\SoapCommon\SoapRequest;
+use BeSimple\SoapCommon\SoapRequestFactory;
 use BeSimple\SoapServer\SoapOptions\SoapServerOptions;
 use BeSimple\SoapCommon\Converter\MtomTypeConverter;
 use BeSimple\SoapCommon\Converter\SwaTypeConverter;
@@ -57,12 +59,19 @@ class SoapServer extends \SoapServer
     /**
      * Custom handle method to be able to modify the SOAP messages.
      *
-     * @param string $request Request string
+     * @param string $requestUrl
+     * @param string $soapAction
+     * @param string $requestContent = null
      * @return string
      */
-    public function handle($request = null)
+    public function handle($requestUrl, $soapAction, $requestContent = null)
     {
-        $soapRequest = SoapRequestFactory::create($request, $this->soapVersion);
+        $soapRequest = SoapRequestFactory::create(
+            $requestUrl,
+            $soapAction,
+            $this->soapVersion,
+            $requestContent
+        );
 
         try {
             $soapResponse = $this->handleSoapRequest($soapRequest);
