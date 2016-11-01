@@ -28,16 +28,18 @@ class SoapOptions
     protected $soapFeatures;
     protected $wsdlFile;
     protected $wsdlCacheType;
+    protected $wsdlCacheDir;
     protected $classMap;
     protected $typeConverterCollection;
     protected $attachmentType;
 
     /**
-     * @param int $soapVersion = SoapOptions::SOAP_VERSION_1_1|SoapOptions::SOAP_VERSION_1_2
+     * @param SoapOptions::SOAP_VERSION_1_1|SoapOptions::SOAP_VERSION_1_2 $soapVersion
      * @param string $encoding = SoapOptions::SOAP_ENCODING_UTF8
      * @param SoapFeatures $features
      * @param string $wsdlFile
      * @param string $wsdlCacheType = SoapOptions::SOAP_CACHE_TYPE_NONE|SoapOptions::SOAP_CACHE_TYPE_MEMORY|SoapOptions::SOAP_CACHE_TYPE_DISK|SoapOptions::SOAP_CACHE_TYPE_DISK_MEMORY
+     * @param string $wsdlCacheDir = null
      * @param ClassMap $classMap
      * @param TypeConverterCollection $typeConverterCollection
      * @param string $attachmentType = SoapOptions::SOAP_ATTACHMENTS_OFF|SoapOptions::SOAP_ATTACHMENTS_TYPE_SWA|SoapOptions::ATTACHMENTS_TYPE_MTOM|SoapOptions::ATTACHMENTS_TYPE_BASE64
@@ -48,6 +50,7 @@ class SoapOptions
         SoapFeatures $features,
         $wsdlFile,
         $wsdlCacheType,
+        $wsdlCacheDir = null,
         ClassMap $classMap,
         TypeConverterCollection $typeConverterCollection,
         $attachmentType = null
@@ -75,6 +78,16 @@ class SoapOptions
     public function getWsdlFile()
     {
         return $this->wsdlFile;
+    }
+
+    public function hasWsdlCacheDir()
+    {
+        return $this->wsdlCacheDir !== null;
+    }
+
+    public function getWsdlCacheDir()
+    {
+        return $this->wsdlCacheDir;
     }
 
     public function getWsdlCacheType()
@@ -118,6 +131,9 @@ class SoapOptions
             'classmap' => $this->getClassMap()->getAll(),
             'typemap' => $this->getTypeConverterCollection()->getTypemap(),
         ];
+        if ($this->hasWsdlCacheDir()) {
+            $optionsAsArray['wsdl_cache_dir'] = $this->getWsdlCacheDir();
+        }
 
         return $optionsAsArray;
     }

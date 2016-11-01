@@ -22,10 +22,37 @@ use InvalidArgumentException;
  */
 class SoapOptionsBuilder
 {
-    static public function createWithDefaults($wsdlFile, $wsdlCacheType = Cache::TYPE_NONE)
-    {
+    static public function createWithDefaults(
+        $wsdlFile,
+        $wsdlCacheType = SoapOptions::SOAP_CACHE_TYPE_NONE,
+        $wsdlCacheDir = null
+    ) {
+        return self::createWithClassMap($wsdlFile, new ClassMap(), $wsdlCacheType, $wsdlCacheDir);
+    }
+
+    static public function createSwaWithClassMap(
+        $wsdlFile,
+        ClassMap $classMap,
+        $wsdlCacheType = SoapOptions::SOAP_CACHE_TYPE_NONE,
+        $wsdlCacheDir = null
+    ) {
+        return self::createWithClassMap($wsdlFile, $classMap, $wsdlCacheType, $wsdlCacheDir, SoapOptions::SOAP_ATTACHMENTS_TYPE_SWA);
+    }
+
+    static public function createWithClassMap(
+        $wsdlFile,
+        ClassMap $classMap,
+        $wsdlCacheType = SoapOptions::SOAP_CACHE_TYPE_NONE,
+        $wsdlCacheDir = null,
+        $attachmentType = null
+    ) {
         if (!Cache::hasType($wsdlCacheType)) {
-            throw new InvalidArgumentException;
+            throw new InvalidArgumentException('Invalid cache type');
+        }
+        if ($wsdlCacheType !== SoapOptions::SOAP_CACHE_TYPE_NONE) {
+            if ($wsdlCacheDir === null) {
+                throw new InvalidArgumentException('Cache dir must be set for this wsdl cache type');
+            }
         }
         $soapOptions = new SoapOptions(
             SoapOptions::SOAP_VERSION_1_2,
@@ -35,8 +62,10 @@ class SoapOptionsBuilder
             ]),
             $wsdlFile,
             $wsdlCacheType,
-            new ClassMap(),
-            new TypeConverterCollection()
+            $wsdlCacheDir,
+            $classMap,
+            new TypeConverterCollection(),
+            $attachmentType
         );
 
         return $soapOptions;
