@@ -28,32 +28,7 @@ use BeSimple\SoapCommon\SoapResponseFilter;
  */
 class MimeFilter implements SoapRequestFilter, SoapResponseFilter
 {
-    /**
-     * Attachment type.
-     *
-     * @var int Helper::ATTACHMENTS_TYPE_SWA | Helper::ATTACHMENTS_TYPE_MTOM
-     */
-    protected $attachmentType = Helper::ATTACHMENTS_TYPE_SWA;
-
-    /**
-     * Constructor.
-     *
-     * @param int $attachmentType Helper::ATTACHMENTS_TYPE_SWA | Helper::ATTACHMENTS_TYPE_MTOM
-     */
-    public function __construct($attachmentType)
-    {
-        $this->attachmentType = $attachmentType;
-    }
-
-    /**
-     * Reset all properties to default values.
-     */
-    public function resetFilter()
-    {
-        $this->attachmentType = Helper::ATTACHMENTS_TYPE_SWA;
-    }
-
-    public function filterRequest(SoapRequest $request)
+    public function filterRequest(SoapRequest $request, $attachmentType)
     {
         $attachmentsReceived = [];
 
@@ -86,7 +61,7 @@ class MimeFilter implements SoapRequestFilter, SoapResponseFilter
         return $request;
     }
 
-    public function filterResponse(SoapResponse $response)
+    public function filterResponse(SoapResponse $response, $attachmentType)
     {
         $attachmentsToSend = $response->getAttachments();
         if (count($attachmentsToSend) > 0) {
@@ -94,7 +69,7 @@ class MimeFilter implements SoapRequestFilter, SoapResponseFilter
             $soapPart = new MimePart($response->getContent(), 'text/xml', 'utf-8', MimePart::ENCODING_EIGHT_BIT);
             $soapVersion = $response->getVersion();
             // change content type headers for MTOM with SOAP 1.1
-            if ($soapVersion == SOAP_1_1 && $this->attachmentType & Helper::ATTACHMENTS_TYPE_MTOM) {
+            if ($soapVersion == SOAP_1_1 && $attachmentType & Helper::ATTACHMENTS_TYPE_MTOM) {
                 $multipart->setHeader('Content-Type', 'type', 'application/xop+xml');
                 $multipart->setHeader('Content-Type', 'start-info', 'text/xml');
                 $soapPart->setHeader('Content-Type', 'application/xop+xml');

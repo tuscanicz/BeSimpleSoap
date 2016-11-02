@@ -100,7 +100,7 @@ class SoapServer extends \SoapServer
     private function handleSoapRequest(SoapRequest $soapRequest)
     {
         if ($this->soapOptions->hasAttachments()) {
-            $soapRequest = $this->soapKernel->filterRequest($soapRequest, $this->getFilters());
+            $soapRequest = $this->soapKernel->filterRequest($soapRequest, $this->getFilters(), $this->soapOptions->getAttachmentType());
         }
 
         ob_start();
@@ -120,7 +120,7 @@ class SoapServer extends \SoapServer
         );
 
         if ($this->soapOptions->hasAttachments()) {
-            $this->soapKernel->filterResponse($soapResponse, $this->getFilters());
+            $soapResponse = $this->soapKernel->filterResponse($soapResponse, $this->getFilters(), $this->soapOptions->getAttachmentType());
         }
 
         return $soapResponse;

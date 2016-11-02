@@ -1,15 +1,5 @@
 <?php
 
-/*
- * This file is part of the BeSimpleSoapClient.
- *
- * (c) Christian Kerl <christian-kerl@web.de>
- * (c) Francis Besset <francis.besset@gmail.com>
- *
- * This source file is subject to the MIT license that is bundled
- * with this source code in the file LICENSE.
- */
-
 namespace BeSimple\SoapClient;
 
 use BeSimple\SoapCommon\FilterHelper;
@@ -24,21 +14,7 @@ use BeSimple\SoapCommon\SoapRequestFilter;
  */
 class XmlMimeFilter implements SoapRequestFilter
 {
-    /**
-     * Reset all properties to default values.
-     */
-    public function resetFilter()
-    {
-    }
-
-    /**
-     * Modify the given request XML.
-     *
-     * @param \BeSimple\SoapCommon\SoapRequest $request SOAP request
-     *
-     * @return void
-     */
-    public function filterRequest(SoapRequest $request)
+    public function filterRequest(SoapRequest $request, $attachmentType)
     {
         // get \DOMDocument from SOAP request
         $dom = $request->getContentDocument();
@@ -66,5 +42,6 @@ class XmlMimeFilter implements SoapRequestFilter
             }
         }
 
+        return $request;
     }
 }

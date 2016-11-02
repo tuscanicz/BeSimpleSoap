@@ -53,13 +53,14 @@ class SoapKernel
      *
      * @param SoapRequest $request Soap request
      * @param SoapRequestFilter[]|SoapResponseFilter[] $filters
+     * @param int $attachmentType = SoapOptions::SOAP_ATTACHMENTS_TYPE_SWA|SoapOptions::ATTACHMENTS_TYPE_MTOM|SoapOptions::ATTACHMENTS_TYPE_BASE64
      * @return SoapRequest
      */
-    public function filterRequest(SoapRequest $request, array $filters)
+    public function filterRequest(SoapRequest $request, array $filters, $attachmentType)
     {
         foreach ($filters as $filter) {
             if ($filter instanceof SoapRequestFilter) {
-                $request = $filter->filterRequest($request);
+                $request = $filter->filterRequest($request, $attachmentType);
             }
         }
 
@@ -71,13 +72,14 @@ class SoapKernel
      *
      * @param SoapResponse $response SOAP response
      * @param SoapRequestFilter[]|SoapResponseFilter[] $filters
+     * @param int $attachmentType = SoapOptions::SOAP_ATTACHMENTS_TYPE_SWA|SoapOptions::ATTACHMENTS_TYPE_MTOM|SoapOptions::ATTACHMENTS_TYPE_BASE64
      * @return SoapResponse
      */
-    public function filterResponse(SoapResponse $response, array $filters)
+    public function filterResponse(SoapResponse $response, array $filters, $attachmentType)
     {
         foreach ($filters as $filter) {
             if ($filter instanceof SoapResponseFilter) {
-                $response = $filter->filterResponse($response);
+                $response = $filter->filterResponse($response, $attachmentType);
             }
         }
 
