@@ -18,6 +18,7 @@ namespace BeSimple\SoapCommon;
 class ClassMap
 {
     protected $classMap;
+    protected $inverseClassMap;
 
     public function __construct(array $classMap = [])
     {
@@ -61,6 +62,7 @@ class ClassMap
         }
 
         $this->classMap[$type] = $className;
+        $this->inverseClassMap[$className] = $type;
     }
 
     /**
@@ -70,6 +72,20 @@ class ClassMap
     public function has($type)
     {
         return isset($this->classmap[$type]);
+    }
+
+    public function getByClassName($className)
+    {
+        if (!$this->hasByClassName($className)) {
+            throw new \InvalidArgumentException(sprintf('The className "%s" was not found in %s', $className, __CLASS__));
+        }
+
+        return $this->inverseClassMap[$className];
+    }
+
+    public function hasByClassName($className)
+    {
+        return isset($this->inverseClassMap[$className]);
     }
 
     public function addClassMap(ClassMap $classMap)

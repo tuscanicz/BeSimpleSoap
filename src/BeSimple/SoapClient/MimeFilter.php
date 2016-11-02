@@ -94,6 +94,6 @@ class MimeFilter implements SoapRequestFilter, SoapResponseFilter
             $response->setAttachments($attachmentsReceived);
         }
 
-    return $response;
+        return $response;
     }
 }

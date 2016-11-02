@@ -33,7 +33,6 @@ class SoapServer extends \SoapServer
     const SOAP_SERVER_REQUEST_FAILED = false;
 
     protected $soapVersion;
-    protected $soapKernel;
     protected $soapServerOptions;
     protected $soapOptions;
 
@@ -48,8 +47,6 @@ class SoapServer extends \SoapServer
         if ($soapOptions->hasAttachments()) {
             $soapOptions = $this->configureTypeConverters($soapOptions);
         }
-
-        $this->soapKernel = new SoapKernel();
         $this->soapVersion = $soapOptions->getSoapVersion();
         $this->soapServerOptions = $soapServerOptions;
         $this->soapOptions = $soapOptions;
@@ -66,9 +63,30 @@ class SoapServer extends \SoapServer
      * @param string $requestUrl
      * @param string $soapAction
      * @param string $requestContent = null
-     * @return string
+     * @return string|false
      */
     public function handle($requestUrl, $soapAction, $requestContent = null)
+    {
+        try {
+
+            return $this->getSoapResponse($requestUrl, $soapAction, $requestContent)->getResponseContent();
+
+        } catch (\SoapFault $fault) {
+            $this->fault($fault->faultcode, $fault->faultstring);
+
+            return self::SOAP_SERVER_REQUEST_FAILED;
+        }
+    }
+
+    /**
+     * Custom handle method to be able to modify the SOAP messages.
+     *
+     * @param string $requestUrl
+     * @param string $soapAction
+     * @param string $requestContent = null
+     * @return SoapResponse
+     */
+    public function getSoapResponse($requestUrl, $soapAction, $requestContent = null)
     {
         $soapRequest = SoapRequestFactory::create(
             $requestUrl,
@@ -76,16 +94,9 @@ class SoapServer extends \SoapServer
             $this->soapVersion,
             $requestContent
         );
+        $soapResponse = $this->handleSoapRequest($soapRequest);
 
-        try {
-            $soapResponse = $this->handleSoapRequest($soapRequest);
-        } catch (\SoapFault $fault) {
-            $this->fault($fault->faultcode, $fault->faultstring);
-
-            return self::SOAP_SERVER_REQUEST_FAILED;
-        }
-
-        return $soapResponse->getResponseContent();
+        return $soapResponse;
     }
 
     /**
@@ -99,8 +110,9 @@ class SoapServer extends \SoapServer
      */
     private function handleSoapRequest(SoapRequest $soapRequest)
     {
+        $soapKernel = new SoapKernel();
         if ($this->soapOptions->hasAttachments()) {
-            $soapRequest = $this->soapKernel->filterRequest($soapRequest, $this->getFilters(), $this->soapOptions->getAttachmentType());
+            $soapRequest = $soapKernel->filterRequest($soapRequest, $this->getFilters(), $this->soapOptions->getAttachmentType());
         }
 
         ob_start();
@@ -111,8 +123,7 @@ class SoapServer extends \SoapServer
         header_remove('Content-Length');
         header_remove('Content-Type');
 
-        // wrap response data in SoapResponse object
-        $soapResponse = SoapResponse::create(
+        $soapResponse = SoapResponseFactory::create(
             $response,
             $soapRequest->getLocation(),
             $soapRequest->getAction(),
@@ -120,7 +131,7 @@ class SoapServer extends \SoapServer
         );
 
         if ($this->soapOptions->hasAttachments()) {
-            $soapResponse = $this->soapKernel->filterResponse($soapResponse, $this->getFilters(), $this->soapOptions->getAttachmentType());
+            $soapResponse = $soapKernel->filterResponse($soapResponse, $this->getFilters(), $this->soapOptions->getAttachmentType());
         }
 
         return $soapResponse;
@@ -145,10 +156,10 @@ class SoapServer extends \SoapServer
     {
         $filters = [];
         if ($this->soapOptions->getAttachmentType() !== SoapOptions::SOAP_ATTACHMENTS_TYPE_BASE64) {
-            $filters[] = new MimeFilter($this->soapOptions->getAttachmentType());
+            $filters[] = new MimeFilter();
         }
         if ($this->soapOptions->getAttachmentType() === SoapOptions::SOAP_ATTACHMENTS_TYPE_MTOM) {
-            $filters[] = new XmlMimeFilter($this->soapOptions->getAttachmentType());
+            $filters[] = new XmlMimeFilter();
         }
 
         return $filters;

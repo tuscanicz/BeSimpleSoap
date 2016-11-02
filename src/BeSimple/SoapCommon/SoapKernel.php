@@ -2,8 +2,6 @@
 
 namespace BeSimple\SoapCommon;
 
-use BeSimple\SoapCommon\Mime\Part as MimePart;
-
 /**
  * SoapKernel provides methods to pre- and post-process SoapRequests and SoapResponses using
  * chains of SoapRequestFilter and SoapResponseFilter objects (roughly following
@@ -14,40 +12,6 @@ use BeSimple\SoapCommon\Mime\Part as MimePart;
  */
 class SoapKernel
 {
-    /**
-    * Add attachment.
-    *
-    * @param \BeSimple\SoapCommon\Mime\Part $attachment New attachment
-    *
-    * @return void
-    */
-    public function addAttachment(MimePart $attachment)
-    {
-        $contentId = trim($attachment->getHeader('Content-ID'), '<>');
-
-        $this->attachments[$contentId] = $attachment;
-    }
-
-    /**
-     * Get attachment and remove from array.
-     *
-     * @param string $contentId Content ID of attachment
-     *
-     * @return \BeSimple\SoapCommon\Mime\Part|null
-     */
-    public function getAttachment($contentId)
-    {
-        if (isset($this->attachments[$contentId])) {
-            $part = $this->attachments[$contentId];
-            unset($this->attachments[$contentId]);
-
-            return $part;
-        }
-
-        return null;
-    }
-
-
     /**
      * Applies all registered SoapRequestFilter to the given SoapRequest.
      *
