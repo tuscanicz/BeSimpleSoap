@@ -35,23 +35,6 @@ class SwaTypeConverter implements TypeConverterInterface
         $doc = new \DOMDocument();
         $doc->loadXML($data);
 
-        // convert href -> myhref for external references as PHP throws exception in this case
-        // http://svn.php.net/viewvc/php/php-src/branches/PHP_5_4/ext/soap/php_encoding.c?view=markup#l3436
-        $ref = $doc->documentElement->getAttribute('myhref');
-
-        if ('cid:' === substr($ref, 0, 4)) {
-            $contentId = urldecode(substr($ref, 4));
-
-            // @todo-critical: ci je nyni zodpovednost vygetovat attachmenty
-            if (null !== ($part = $this->soapKernel->getAttachment($contentId))) {
-
-                return $part->getContent();
-            } else {
-
-                return null;
-            }
-        }
-
         return $data;
     }
 
@@ -62,9 +45,6 @@ class SwaTypeConverter implements TypeConverterInterface
     {
         $part = new MimePart($data);
         $contentId = trim($part->getHeader('Content-ID'), '<>');
-
-        // @todo-critical: ci je nyni zodpovednost nastrkat attachmenty
-        //$this->soapKernel->addAttachment($part);
 
         return sprintf('<%s href="%s"/>', $this->getTypeName(), 'cid:' . $contentId);
     }

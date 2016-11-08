@@ -25,54 +25,22 @@ use BeSimple\SoapCommon\Helper;
  */
 class WsdlDownloader
 {
-    /**
-     * Cache enabled.
-     *
-     * @var bool
-     */
+    protected $curl;
+    protected $resolveRemoteIncludes = true;
     protected $cacheEnabled;
-
-    /**
-     * Cache dir.
-     *
-     * @var string
-     */
     protected $cacheDir;
-
-    /**
-     * Cache TTL.
-     *
-     * @var int
-     */
     protected $cacheTtl;
 
     /**
-     * cURL instance for downloads.
-     *
-     * @var unknown_type
+     * @param Curl $curl
+     * @param int $cacheWsdl = Cache::TYPE_NONE|Cache::WSDL_CACHE_DISK|Cache::WSDL_CACHE_BOTH|Cache::WSDL_CACHE_MEMORY
+     * @param boolean $resolveRemoteIncludes
      */
-    protected $curl;
-
-    /**
-     * Resolve WSDl/XSD includes.
-     *
-     * @var boolean
-     */
-    protected $resolveRemoteIncludes = true;
-
-    /**
-     * Constructor.
-     *
-     * @param \BeSimple\SoapClient\Curl $curl                  Curl instance
-     * @param boolean                   $resolveRemoteIncludes WSDL/XSD include enabled?
-     * @param boolean                   $cacheWsdl             Cache constant
-     */
-    public function __construct(Curl $curl, $resolveRemoteIncludes = true, $cacheWsdl = Cache::TYPE_DISK)
+    public function __construct(Curl $curl, $cacheWsdl, $resolveRemoteIncludes = true)
     {
-        $this->curl                  = $curl;
-        $this->resolveRemoteIncludes = (Boolean) $resolveRemoteIncludes;
+        $this->curl = $curl;
+        $this->resolveRemoteIncludes = $resolveRemoteIncludes;
 
-        // get current WSDL caching config
         $this->cacheEnabled = $cacheWsdl === Cache::TYPE_NONE ? Cache::DISABLED : Cache::ENABLED == Cache::isEnabled();
         $this->cacheDir = Cache::getDirectory();
         $this->cacheTtl = Cache::getLifetime();

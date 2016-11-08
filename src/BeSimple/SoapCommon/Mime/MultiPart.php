@@ -12,6 +12,7 @@
 
 namespace BeSimple\SoapCommon\Mime;
 
+use Exception;
 use BeSimple\SoapCommon\Helper;
 
 /**
@@ -38,16 +39,14 @@ class MultiPart extends PartHeader
     /**
      * Mime parts.
      *
-     * @var array(\BeSimple\SoapCommon\Mime\Part)
+     * @var \BeSimple\SoapCommon\Mime\Part[]
      */
-    protected $parts = array();
+    protected $parts = [];
 
     /**
      * Construct new mime object.
      *
-     * @param string $boundary Boundary string
-     *
-     * @return void
+     * @param string $boundary
      */
     public function __construct($boundary = null)
     {
@@ -55,10 +54,9 @@ class MultiPart extends PartHeader
         $this->setHeader('Content-Type', 'multipart/related');
         $this->setHeader('Content-Type', 'type', 'text/xml');
         $this->setHeader('Content-Type', 'charset', 'utf-8');
-        if (is_null($boundary)) {
-            $boundary = $this->generateBoundary();
+        if ($boundary !== null) {
+            $this->setHeader('Content-Type', 'boundary', $boundary);
         }
-        $this->setHeader('Content-Type', 'boundary', $boundary);
     }
 
     /**
@@ -73,10 +71,11 @@ class MultiPart extends PartHeader
         $message = ($withHeaders === true) ? $this->generateHeaders() : "";
         // add parts
         foreach ($this->parts as $part) {
-            $message .= "\r\n" . '--' . $this->getHeader('Content-Type', 'boundary') . "\r\n";
+            $message .= "\n" . '--' . $this->getHeader('Content-Type', 'boundary') . "\n";
             $message .= $part->getMessagePart();
         }
-        $message .= "\r\n" . '--' . $this->getHeader('Content-Type', 'boundary') . '--';
+        $message .= "\n" . '--' . $this->getHeader('Content-Type', 'boundary') . '--';
+
         return $message;
     }
 
@@ -84,22 +83,23 @@ class MultiPart extends PartHeader
      * Get string array with MIME headers for usage in HTTP header (with CURL).
      * Only 'Content-Type' and 'Content-Description' headers are returned.
      *
-     * @return arrray(string)
+     * @return string[]
      */
     public function getHeadersForHttp()
     {
-        $allowed = array(
+        $allowedHeaders = [
             'Content-Type',
             'Content-Description',
-        );
-        $headers = array();
+        ];
+        $headers = [];
         foreach ($this->headers as $fieldName => $value) {
-            if (in_array($fieldName, $allowed)) {
+            if (in_array($fieldName, $allowedHeaders)) {
                 $fieldValue = $this->generateHeaderFieldValue($value);
                 // for http only ISO-8859-1
                 $headers[] = $fieldName . ': '. iconv('utf-8', 'ISO-8859-1//TRANSLIT', $fieldValue);
             }
         }
+
         return $headers;
     }
 
@@ -122,44 +122,51 @@ class MultiPart extends PartHeader
     }
 
     /**
-     * Get part with given content id. If there is no content id given it
-     * returns the main part that is defined through the content-id start
-     * parameter.
+     * Get part with given content id.
      *
      * @param string $contentId Content id of desired part
      *
-     * @return \BeSimple\SoapCommon\Mime\Part|null
+     * @return \BeSimple\SoapCommon\Mime\Part
      */
-    public function getPart($contentId = null)
+    public function getPart($contentId)
     {
-        if (is_null($contentId)) {
-            $contentId = $this->mainPartContentId;
-        }
         if (isset($this->parts[$contentId])) {
             return $this->parts[$contentId];
         }
-        return null;
+
+        throw new Exception('MimePart not found by ID: ' . $contentId);
     }
 
     /**
-     * Get all parts.
+     * Get main part.
      *
-     * @param boolean $includeMainPart Should main part be in result set
-     *
-     * @return array(\BeSimple\SoapCommon\Mime\Part)
+     * @return \BeSimple\SoapCommon\Mime\Part
      */
-    public function getParts($includeMainPart = false)
+    public function getMainPart()
     {
-        if ($includeMainPart === true) {
-            $parts = $this->parts;
-        } else {
-            $parts = array();
-            foreach ($this->parts as $cid => $part) {
-                if ($cid != $this->mainPartContentId) {
-                    $parts[$cid] = $part;
-                }
+        foreach ($this->parts as $cid => $part) {
+            if ($cid === $this->mainPartContentId) {
+                return $part;
             }
         }
+
+        throw new Exception('SoapRequest error: main part not found by Id: ' . $this->mainPartContentId);
+    }
+
+    /**
+     * Get attachment parts.
+     *
+     * @return \BeSimple\SoapCommon\Mime\Part[]
+     */
+    public function getAttachments()
+    {
+        $parts = [];
+        foreach ($this->parts as $cid => $part) {
+            if ($cid !== $this->mainPartContentId) {
+                $parts[$cid] = $part;
+            }
+        }
+
         return $parts;
     }
 
@@ -168,7 +175,7 @@ class MultiPart extends PartHeader
      *
      * @return string
      */
-    protected function generateBoundary()
+    public function generateBoundary()
     {
         return 'urn:uuid:' . Helper::generateUUID();
     }

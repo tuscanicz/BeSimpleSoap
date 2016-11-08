@@ -12,6 +12,8 @@
 
 namespace BeSimple\SoapServer;
 
+use BeSimple\SoapBundle\Soap\SoapAttachment;
+use BeSimple\SoapCommon\Mime\Part;
 use BeSimple\SoapCommon\SoapMessage;
 
 class SoapResponseFactory
@@ -23,7 +25,7 @@ class SoapResponseFactory
      * @param string $location Location
      * @param string $action   SOAP action
      * @param string $version  SOAP version
-     * @param array $attachments SOAP attachments
+     * @param SoapAttachment[] $attachments SOAP attachments
      *
      * @return SoapResponse
      */
@@ -37,6 +39,33 @@ class SoapResponseFactory
         $contentType = SoapMessage::getContentTypeForVersion($version);
         $response->setContentType($contentType);
 
+        if (count($attachments) > 0) {
+            $response->setAttachments(
+                self::createAttachmentParts($attachments)
+            );
+        }
+
         return $response;
+    }
+
+    /**
+     * @param SoapAttachment[] $attachments SOAP attachments
+     * @return Part[]
+     */
+    private function createAttachmentParts(array $attachments = [])
+    {
+        $parts = [];
+        foreach ($attachments as $attachment) {
+            $part = new Part(
+                $attachment->getContent(),
+                'application/pdf',
+                'utf-8',
+                Part::ENCODING_BINARY,
+                $attachment->getId()
+            );
+            $parts[] = $part;
+        }
+
+        return $parts;
     }
 }

@@ -31,7 +31,7 @@ class XmlMimeFilter implements SoapResponseFilter
     {
     }
 
-    public function filterResponse(SoapResponse $response)
+    public function filterResponse(SoapResponse $response, $attachmentType)
     {
         $dom = $response->getContentDocument();
 

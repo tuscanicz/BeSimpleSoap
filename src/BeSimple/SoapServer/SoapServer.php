@@ -12,10 +12,13 @@
 
 namespace BeSimple\SoapServer;
 
+use BeSimple\SoapBundle\Soap\SoapAttachment;
+use BeSimple\SoapCommon\AttachmentsHandler;
 use BeSimple\SoapCommon\SoapKernel;
 use BeSimple\SoapCommon\SoapOptions\SoapOptions;
 use BeSimple\SoapCommon\SoapRequest;
 use BeSimple\SoapCommon\SoapRequestFactory;
+use BeSimple\SoapCommon\Storage\RequestHandlerAttachmentsStorage;
 use BeSimple\SoapServer\SoapOptions\SoapServerOptions;
 use BeSimple\SoapCommon\Converter\MtomTypeConverter;
 use BeSimple\SoapCommon\Converter\SwaTypeConverter;
@@ -44,9 +47,6 @@ class SoapServer extends \SoapServer
      */
     public function __construct(SoapServerOptions $soapServerOptions, SoapOptions $soapOptions)
     {
-        if ($soapOptions->hasAttachments()) {
-            $soapOptions = $this->configureTypeConverters($soapOptions);
-        }
         $this->soapVersion = $soapOptions->getSoapVersion();
         $this->soapServerOptions = $soapServerOptions;
         $this->soapOptions = $soapOptions;
@@ -60,6 +60,7 @@ class SoapServer extends \SoapServer
     /**
      * Custom handle method to be able to modify the SOAP messages.
      *
+     * @deprecated Please, use createRequest + handleRequest methods
      * @param string $requestUrl
      * @param string $soapAction
      * @param string $requestContent = null
@@ -67,15 +68,9 @@ class SoapServer extends \SoapServer
      */
     public function handle($requestUrl, $soapAction, $requestContent = null)
     {
-        try {
-
-            return $this->getSoapResponse($requestUrl, $soapAction, $requestContent)->getResponseContent();
-
-        } catch (\SoapFault $fault) {
-            $this->fault($fault->faultcode, $fault->faultstring);
-
-            return self::SOAP_SERVER_REQUEST_FAILED;
-        }
+        return $this->handleRequest(
+            $this->createRequest($requestUrl, $soapAction, $requestContent)
+        );
     }
 
     /**
@@ -83,20 +78,42 @@ class SoapServer extends \SoapServer
      *
      * @param string $requestUrl
      * @param string $soapAction
+     * @param string $requestContentType
      * @param string $requestContent = null
-     * @return SoapResponse
+     * @return SoapRequest
      */
-    public function getSoapResponse($requestUrl, $soapAction, $requestContent = null)
+    public function createRequest($requestUrl, $soapAction, $requestContentType, $requestContent = null)
     {
         $soapRequest = SoapRequestFactory::create(
             $requestUrl,
             $soapAction,
             $this->soapVersion,
+            $requestContentType,
             $requestContent
         );
-        $soapResponse = $this->handleSoapRequest($soapRequest);
+        $soapKernel = new SoapKernel();
+        if ($this->soapOptions->hasAttachments()) {
+            $soapRequest = $soapKernel->filterRequest(
+                $soapRequest,
+                $this->getAttachmentFilters(),
+                $this->soapOptions->getAttachmentType()
+            );
+        }
 
-        return $soapResponse;
+        return $soapRequest;
+    }
+
+    public function handleRequest(SoapRequest $soapRequest)
+    {
+        try {
+
+            return $this->handleSoapRequest($soapRequest);
+
+        } catch (\SoapFault $fault) {
+            $this->fault($fault->faultcode, $fault->faultstring);
+
+            return self::SOAP_SERVER_REQUEST_FAILED;
+        }
     }
 
     /**
@@ -110,33 +127,87 @@ class SoapServer extends \SoapServer
      */
     private function handleSoapRequest(SoapRequest $soapRequest)
     {
-        $soapKernel = new SoapKernel();
+        /** @var AttachmentsHandler $handler */
+        $handler = $this->soapServerOptions->getHandler();
+
         if ($this->soapOptions->hasAttachments()) {
-            $soapRequest = $soapKernel->filterRequest($soapRequest, $this->getFilters(), $this->soapOptions->getAttachmentType());
+            $this->injectAttachmentStorage($handler, $soapRequest, $this->soapOptions->getAttachmentType());
         }
 
         ob_start();
         parent::handle($soapRequest->getContent());
-        $response = ob_get_clean();
+        $nativeSoapServerResponse = ob_get_clean();
+
+        $attachments = [];
+        if ($this->soapOptions->hasAttachments()) {
+            $attachments = $handler->getAttachmentsFromStorage();
+        }
 
         // Remove headers added by SoapServer::handle() method
         header_remove('Content-Length');
         header_remove('Content-Type');
 
-        $soapResponse = SoapResponseFactory::create(
-            $response,
+        return $this->createResponse(
             $soapRequest->getLocation(),
             $soapRequest->getAction(),
-            $soapRequest->getVersion()
+            $soapRequest->getVersion(),
+            $nativeSoapServerResponse,
+            $attachments
         );
+    }
 
+    /**
+     * @param string $requestLocation
+     * @param string $soapAction
+     * @param string $soapVersion
+     * @param string|null $responseContent
+     * @param SoapAttachment[] $attachments
+     * @return SoapResponse
+     */
+    private function createResponse($requestLocation, $soapAction, $soapVersion, $responseContent = null, $attachments = [])
+    {
+        $soapResponse = SoapResponseFactory::create(
+            $responseContent,
+            $requestLocation,
+            $soapAction,
+            $soapVersion,
+            $attachments
+        );
+        $soapKernel = new SoapKernel();
         if ($this->soapOptions->hasAttachments()) {
-            $soapResponse = $soapKernel->filterResponse($soapResponse, $this->getFilters(), $this->soapOptions->getAttachmentType());
+            $soapResponse = $soapKernel->filterResponse(
+                $soapResponse,
+                $this->getAttachmentFilters(),
+                $this->soapOptions->getAttachmentType()
+            );
         }
 
         return $soapResponse;
     }
 
+    private function injectAttachmentStorage(AttachmentsHandler $handler, SoapRequest $soapRequest, $attachmentType)
+    {
+        $attachments = [];
+        if ($soapRequest->hasAttachments()) {
+            foreach ($soapRequest->getAttachments() as $attachment) {
+                $attachments[] = new SoapAttachment(
+                    $attachment->getHeader('Content-Disposition', 'filename'),
+                    $attachmentType,
+                    $attachment->getContent()
+                );
+            }
+        }
+        $handler->addAttachmentStorage(new RequestHandlerAttachmentsStorage($attachments));
+    }
+
+    /**
+     * Legacy code: TypeConverters should be resolved in SoapServer::__construct()
+     * To be removed if all tests pass
+     *
+     * @deprecated
+     * @param SoapOptions $soapOptions
+     * @return SoapOptions
+     */
     private function configureTypeConverters(SoapOptions $soapOptions)
     {
         if ($soapOptions->getAttachmentType() !== SoapOptions::SOAP_ATTACHMENTS_TYPE_BASE64) {
@@ -152,7 +223,7 @@ class SoapServer extends \SoapServer
         return $soapOptions;
     }
 
-    private function getFilters()
+    private function getAttachmentFilters()
     {
         $filters = [];
         if ($this->soapOptions->getAttachmentType() !== SoapOptions::SOAP_ATTACHMENTS_TYPE_BASE64) {

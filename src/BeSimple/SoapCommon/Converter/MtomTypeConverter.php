@@ -14,16 +14,13 @@ namespace BeSimple\SoapCommon\Converter;
 
 use BeSimple\SoapCommon\Helper;
 use BeSimple\SoapCommon\Mime\Part as MimePart;
-use BeSimple\SoapCommon\SoapKernel;
-use BeSimple\SoapCommon\Converter\SoapKernelAwareInterface;
-use BeSimple\SoapCommon\Converter\TypeConverterInterface;
 
 /**
  * MTOM type converter.
  *
  * @author Andreas Schamberger <mail@andreass.net>
  */
-class MtomTypeConverter implements TypeConverterInterface, SoapKernelAwareInterface
+class MtomTypeConverter implements TypeConverterInterface
 {
     /**
      * @var \BeSimple\SoapCommon\SoapKernel $soapKernel SoapKernel instance
@@ -54,25 +51,6 @@ class MtomTypeConverter implements TypeConverterInterface, SoapKernelAwareInterf
         $doc = new \DOMDocument();
         $doc->loadXML($data);
 
-        $includes = $doc->getElementsByTagNameNS(Helper::NS_XOP, 'Include');
-        $include = $includes->item(0);
-
-        // convert href -> myhref for external references as PHP throws exception in this case
-        // http://svn.php.net/viewvc/php/php-src/branches/PHP_5_4/ext/soap/php_encoding.c?view=markup#l3436
-        $ref = $include->getAttribute('myhref');
-
-        if ('cid:' === substr($ref, 0, 4)) {
-            $contentId = urldecode(substr($ref, 4));
-
-            if (null !== ($part = $this->soapKernel->getAttachment($contentId))) {
-
-                return $part->getContent();
-            } else {
-
-                return null;
-            }
-        }
-
         return $data;
     }
 
@@ -84,8 +62,6 @@ class MtomTypeConverter implements TypeConverterInterface, SoapKernelAwareInterf
         $part = new MimePart($data);
         $contentId = trim($part->getHeader('Content-ID'), '<>');
 
-        $this->soapKernel->addAttachment($part);
-
         $doc = new \DOMDocument();
         $node = $doc->createElement($this->getTypeName());
         $doc->appendChild($node);
@@ -96,13 +72,5 @@ class MtomTypeConverter implements TypeConverterInterface, SoapKernelAwareInterf
         $node->appendChild($xinclude);
 
         return $doc->saveXML();
-    }
-
-    /**
-    * {@inheritDoc}
-    */
-    public function setKernel(SoapKernel $soapKernel)
-    {
-        $this->soapKernel = $soapKernel;
     }
 }

@@ -10,11 +10,12 @@ class SoapRequestFactory
      * @param string $location Location
      * @param string $action   SOAP action
      * @param string $version  SOAP version
+     * @param string $contentType  Content Type
      * @param string $content  Content
      *
      * @return SoapRequest
      */
-    public static function create($location, $action, $version, $content = null)
+    public static function create($location, $action, $version, $contentType, $content = null)
     {
         $request = new SoapRequest();
         // $content is if unmodified from SoapClient not a php string type!
@@ -22,7 +23,6 @@ class SoapRequestFactory
         $request->setLocation($location);
         $request->setAction($action);
         $request->setVersion($version);
-        $contentType = SoapMessage::getContentTypeForVersion($version);
         $request->setContentType($contentType);
 
         return $request;

@@ -45,12 +45,12 @@ abstract class SoapMessage
     /**
      * Content types for SOAP versions.
      *
-     * @var array(string=>string)
+     * @var array (string=>string)
      */
-    static protected $versionToContentTypeMap = array(
+    static protected $versionToContentTypeMap = [
         SOAP_1_1 => 'text/xml; charset=utf-8',
         SOAP_1_2 => 'application/soap+xml; charset=utf-8'
-    );
+    ];
 
     /**
      * SOAP action.
@@ -64,7 +64,7 @@ abstract class SoapMessage
      *
      * @var array(\BeSimple\SoapCommon\Mime\Part)
      */
-    protected $attachments = array();
+    protected $attachments;
 
     /**
      * Message content (MIME Message or SOAP Envelope).
@@ -111,8 +111,8 @@ abstract class SoapMessage
     */
     public static function getContentTypeForVersion($version)
     {
-        if (!in_array($version, array(SOAP_1_1, SOAP_1_2))) {
-            throw new \InvalidArgumentException("The 'version' argument has to be either 'SOAP_1_1' or 'SOAP_1_2'!");
+        if (!in_array($version, [SOAP_1_1, SOAP_1_2])) {
+            throw new \InvalidArgumentException('Invalid SOAP version: ' . $version);
         }
 
         return self::$versionToContentTypeMap[$version];
@@ -138,10 +138,15 @@ abstract class SoapMessage
         $this->action = $action;
     }
 
+    public function hasAttachments()
+    {
+        return $this->attachments !== null;
+    }
+
     /**
      * Get attachments.
      *
-     * @return array(\BeSimple\SoapCommon\Mime\Part)
+     * @return \BeSimple\SoapCommon\Mime\Part[]
      */
     public function getAttachments()
     {
@@ -151,7 +156,7 @@ abstract class SoapMessage
     /**
      * Set SOAP action.
      *
-     * @param array(\BeSimple\SoapCommon\Mime\Part) $attachments Attachment array
+     * @param \BeSimple\SoapCommon\Mime\Part[] $attachments
      */
     public function setAttachments(array $attachments)
     {
@@ -165,10 +170,11 @@ abstract class SoapMessage
      */
     public function getContent()
     {
-        if (null !== $this->contentDomDocument) {
+        if ($this->contentDomDocument !== null) {
             $this->content = $this->contentDomDocument->saveXML();
             $this->contentDomDocument = null;
         }
+
         return $this->content;
     }
 

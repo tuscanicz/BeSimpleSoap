@@ -19,12 +19,7 @@ namespace BeSimple\SoapCommon\Mime;
  */
 abstract class PartHeader
 {
-    /**
-     * Mime headers.
-     *
-     * @var array(string=>mixed|array(mixed))
-     */
-    protected $headers = array();
+    protected $headers = [];
 
     /**
      * Add a new header to the mime part.
@@ -39,10 +34,10 @@ abstract class PartHeader
     {
         if (isset($this->headers[$name]) && !is_null($subValue)) {
             if (!is_array($this->headers[$name])) {
-                $this->headers[$name] = array(
+                $this->headers[$name] = [
                     '@'    => $this->headers[$name],
                     $value => $subValue,
-                );
+                ];
             } else {
                 $this->headers[$name][$value] = $subValue;
             }
@@ -76,6 +71,7 @@ abstract class PartHeader
                 return $this->headers[$name];
             }
         }
+
         return null;
     }
 
@@ -86,19 +82,12 @@ abstract class PartHeader
      */
     protected function generateHeaders()
     {
-        $charset = strtolower($this->getHeader('Content-Type', 'charset'));
-        $preferences = array(
-            'scheme' => 'Q',
-            'input-charset' => 'utf-8',
-            'output-charset' => $charset,
-        );
         $headers = '';
         foreach ($this->headers as $fieldName => $value) {
             $fieldValue = $this->generateHeaderFieldValue($value);
-            // do not use proper encoding as Apache Axis does not understand this
-            // $headers .= iconv_mime_encode($field_name, $field_value, $preferences) . "\r\n";
-            $headers .= $fieldName . ': ' . $fieldValue . "\r\n";
+            $headers .= $fieldName . ': ' . $fieldValue . "\n";
         }
+
         return $headers;
     }
 
@@ -124,6 +113,7 @@ abstract class PartHeader
         } else {
             $fieldValue .= $value;
         }
+
         return $fieldValue;
     }
 

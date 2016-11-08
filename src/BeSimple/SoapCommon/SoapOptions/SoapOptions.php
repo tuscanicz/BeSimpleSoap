@@ -90,6 +90,11 @@ class SoapOptions
         return $this->wsdlCacheDir;
     }
 
+    public function isWsdlCached()
+    {
+        return $this->wsdlCacheType !== self::SOAP_CACHE_TYPE_NONE;
+    }
+
     public function getWsdlCacheType()
     {
         return $this->wsdlCacheType;

@@ -2,6 +2,8 @@
 
 namespace BeSimple\SoapServer\SoapOptions;
 
+use Exception;
+
 class SoapServerOptions
 {
     const SOAP_SERVER_PERSISTENCE_NONE = 0;
@@ -41,6 +43,22 @@ class SoapServerOptions
         $this->errorReporting = $errorReporting;
         $this->exceptions = $exceptions;
         $this->persistence = $persistence;
+    }
+
+    public function getHandler()
+    {
+        if ($this->hasHandlerObject()) {
+
+            return $this->getHandlerObject();
+
+        } else if ($this->hasHandlerClass()) {
+
+            return $this->getHandlerClass();
+
+        } else {
+
+            throw new Exception('No HandlerClass or HandlerObject set');
+        }
     }
 
     public function hasHandlerClass()

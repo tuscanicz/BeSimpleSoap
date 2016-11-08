@@ -16,6 +16,7 @@ use BeSimple\SoapCommon\Helper;
 use BeSimple\SoapCommon\Mime\MultiPart as MimeMultiPart;
 use BeSimple\SoapCommon\Mime\Parser as MimeParser;
 use BeSimple\SoapCommon\Mime\Part as MimePart;
+use BeSimple\SoapCommon\Mime\Part;
 use BeSimple\SoapCommon\SoapRequest;
 use BeSimple\SoapCommon\SoapRequestFilter;
 use BeSimple\SoapCommon\SoapResponse;
@@ -30,32 +31,17 @@ class MimeFilter implements SoapRequestFilter, SoapResponseFilter
 {
     public function filterRequest(SoapRequest $request, $attachmentType)
     {
-        $attachmentsReceived = [];
+        $multiPartMessage = MimeParser::parseMimeMessage(
+            $request->getContent(),
+            ['Content-Type' => trim($request->getContentType())]
+        );
+        $soapPart = $multiPartMessage->getMainPart();
+        $attachments = $multiPartMessage->getAttachments();
 
-        // check content type if it is a multipart mime message
-        $requestContentType = $request->getContentType();
-        if (stripos($requestContentType, 'multipart/related') !== false) {
-            // parse mime message
-            $headers = [
-                'Content-Type' => trim($requestContentType),
-            ];
-            $multipart = MimeParser::parseMimeMessage($request->getContent(), $headers);
-            // get soap payload and update SoapResponse object
-            $soapPart = $multipart->getPart();
-            // convert href -> myhref for external references as PHP throws exception in this case
-            // http://svn.php.net/viewvc/php/php-src/branches/PHP_5_4/ext/soap/php_encoding.c?view=markup#l3436
-            $content = preg_replace('/href=(?!#)/', 'myhref=', $soapPart->getContent());
-            $request->setContent($content);
-            $request->setContentType($soapPart->getHeader('Content-Type'));
-            // store attachments
-            $attachments = $multipart->getParts(false);
-            foreach ($attachments as $cid => $attachment) {
-                $attachmentsReceived[$cid] = $attachment;
-            }
-        }
-
-        if (count($attachmentsReceived) > 0) {
-            $request->setAttachments($attachmentsReceived);
+        $request->setContent($this->sanitizePhpExceptionOnHrefs($soapPart));
+        $request->setContentType($soapPart->getHeader('Content-Type'));
+        if (count($attachments) > 0) {
+            $request->setAttachments($attachments);
         }
 
         return $request;
@@ -65,28 +51,26 @@ class MimeFilter implements SoapRequestFilter, SoapResponseFilter
     {
         $attachmentsToSend = $response->getAttachments();
         if (count($attachmentsToSend) > 0) {
-            $multipart = new MimeMultiPart();
+            $multipart = new MimeMultiPart('Part_' . rand(10, 15) . '_' . uniqid() . '.' . uniqid());
             $soapPart = new MimePart($response->getContent(), 'text/xml', 'utf-8', MimePart::ENCODING_EIGHT_BIT);
             $soapVersion = $response->getVersion();
-            // change content type headers for MTOM with SOAP 1.1
-            if ($soapVersion == SOAP_1_1 && $attachmentType & Helper::ATTACHMENTS_TYPE_MTOM) {
+
+            if ($soapVersion === SOAP_1_1 && $attachmentType === Helper::ATTACHMENTS_TYPE_MTOM) {
                 $multipart->setHeader('Content-Type', 'type', 'application/xop+xml');
                 $multipart->setHeader('Content-Type', 'start-info', 'text/xml');
                 $soapPart->setHeader('Content-Type', 'application/xop+xml');
                 $soapPart->setHeader('Content-Type', 'type', 'text/xml');
-            }
-            // change content type headers for SOAP 1.2
-            elseif ($soapVersion == SOAP_1_2) {
+            } elseif ($soapVersion === SOAP_1_2) {
                 $multipart->setHeader('Content-Type', 'type', 'application/soap+xml');
                 $soapPart->setHeader('Content-Type', 'application/soap+xml');
             }
+
             $multipart->addPart($soapPart, true);
             foreach ($attachmentsToSend as $cid => $attachment) {
                 $multipart->addPart($attachment, false);
             }
             $response->setContent($multipart->getMimeMessage());
 
-            // TODO
             $headers = $multipart->getHeadersForHttp();
             list(, $contentType) = explode(': ', $headers[0]);
 
@@ -94,5 +78,12 @@ class MimeFilter implements SoapRequestFilter, SoapResponseFilter
         }
 
         return $response;
+    }
+
+    private function sanitizePhpExceptionOnHrefs(Part $soapPart)
+    {
+        // convert href -> myhref for external references as PHP throws exception in this case
+        // http://svn.php.net/viewvc/php/php-src/branches/PHP_5_4/ext/soap/php_encoding.c?view=markup#l3436
+        return preg_replace('/href=(?!#)/', 'myhref=', $soapPart->getContent());
     }
 }

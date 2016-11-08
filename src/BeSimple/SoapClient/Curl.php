@@ -50,11 +50,10 @@ class Curl
     /**
      * Constructor.
      *
-     * @todo: do not use options as Array
      * @param array $options                    Options array from SoapClient constructor
      * @param int   $followLocationMaxRedirects Redirection limit for Location header
      */
-    public function __construct(array $options = array(), $followLocationMaxRedirects = 10)
+    public function __construct(array $options = [], $followLocationMaxRedirects = 10)
     {
         // set the default HTTP user agent
         if (!isset($options['user_agent'])) {
@@ -126,7 +125,7 @@ class Curl
 
     /**
      * Execute HTTP request.
-     * Returns true if request was successfull.
+     * Returns true if request was successful.
      *
      * @param string $location       HTTP location
      * @param string $request        Request body

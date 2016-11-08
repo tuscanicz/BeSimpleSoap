@@ -69,7 +69,6 @@ class Part extends PartHeader
      * @param string $encoding    Encoding
      * @param string $contentId   Content id
      *
-     * @return void
      */
     public function __construct($content = null, $contentType = 'application/octet-stream', $charset = null, $encoding = self::ENCODING_BINARY, $contentId = null)
     {
