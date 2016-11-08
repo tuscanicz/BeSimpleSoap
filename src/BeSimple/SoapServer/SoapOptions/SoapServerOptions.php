@@ -61,6 +61,17 @@ class SoapServerOptions
         }
     }
 
+    public function getHandlerInstance()
+    {
+        if ($this->hasHandlerClass()) {
+            $handlerClassName = $this->handlerClass;
+
+            return new $handlerClassName;
+        }
+
+        return $this->getHandler();
+    }
+
     public function hasHandlerClass()
     {
         return $this->handlerClass !== null;

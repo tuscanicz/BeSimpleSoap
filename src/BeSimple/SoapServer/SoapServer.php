@@ -13,7 +13,7 @@
 namespace BeSimple\SoapServer;
 
 use BeSimple\SoapBundle\Soap\SoapAttachment;
-use BeSimple\SoapCommon\AttachmentsHandler;
+use BeSimple\SoapCommon\AttachmentsHandlerInterface;
 use BeSimple\SoapCommon\SoapKernel;
 use BeSimple\SoapCommon\SoapOptions\SoapOptions;
 use BeSimple\SoapCommon\SoapRequest;
@@ -22,7 +22,7 @@ use BeSimple\SoapCommon\Storage\RequestHandlerAttachmentsStorage;
 use BeSimple\SoapServer\SoapOptions\SoapServerOptions;
 use BeSimple\SoapCommon\Converter\MtomTypeConverter;
 use BeSimple\SoapCommon\Converter\SwaTypeConverter;
-use Exception;
+use InvalidArgumentException;
 
 /**
  * Extended SoapServer that allows adding filters for SwA, MTOM, ... .
@@ -47,6 +47,8 @@ class SoapServer extends \SoapServer
      */
     public function __construct(SoapServerOptions $soapServerOptions, SoapOptions $soapOptions)
     {
+        $this->validateSoapConfigs($soapServerOptions, $soapOptions);
+
         $this->soapVersion = $soapOptions->getSoapVersion();
         $this->soapServerOptions = $soapServerOptions;
         $this->soapOptions = $soapOptions;
@@ -127,7 +129,7 @@ class SoapServer extends \SoapServer
      */
     private function handleSoapRequest(SoapRequest $soapRequest)
     {
-        /** @var AttachmentsHandler $handler */
+        /** @var AttachmentsHandlerInterface $handler */
         $handler = $this->soapServerOptions->getHandler();
 
         if ($this->soapOptions->hasAttachments()) {
@@ -140,7 +142,7 @@ class SoapServer extends \SoapServer
 
         $attachments = [];
         if ($this->soapOptions->hasAttachments()) {
-            $attachments = $handler->getAttachmentsFromStorage();
+            $attachments = $handler->getAttachmentStorage()->getAttachments();
         }
 
         // Remove headers added by SoapServer::handle() method
@@ -185,7 +187,7 @@ class SoapServer extends \SoapServer
         return $soapResponse;
     }
 
-    private function injectAttachmentStorage(AttachmentsHandler $handler, SoapRequest $soapRequest, $attachmentType)
+    private function injectAttachmentStorage(AttachmentsHandlerInterface $handler, SoapRequest $soapRequest, $attachmentType)
     {
         $attachments = [];
         if ($soapRequest->hasAttachments()) {
@@ -216,7 +218,7 @@ class SoapServer extends \SoapServer
             } elseif ($soapOptions->getAttachmentType() === SoapOptions::SOAP_ATTACHMENTS_TYPE_MTOM) {
                 $soapOptions->getTypeConverterCollection()->add(new MtomTypeConverter());
             } else {
-                throw new Exception('Unresolved SOAP_ATTACHMENTS_TYPE: ' . $soapOptions->getAttachmentType());
+                throw new InvalidArgumentException('Unresolved SOAP_ATTACHMENTS_TYPE: ' . $soapOptions->getAttachmentType());
             }
         }
 
@@ -234,5 +236,21 @@ class SoapServer extends \SoapServer
         }
 
         return $filters;
+    }
+
+    private function validateSoapConfigs(SoapServerOptions $soapServerOptions, SoapOptions $soapOptions)
+    {
+        if ($soapOptions->hasAttachments()) {
+            if (!$soapServerOptions->getHandlerInstance() instanceof AttachmentsHandlerInterface) {
+                throw new InvalidArgumentException(
+                    sprintf(
+                        '%s::handlerObject or handlerClass (instance of %s given) must implement %s in order to handle with attachments',
+                        SoapServerOptions::class,
+                        get_class($soapServerOptions->getHandlerInstance()),
+                        AttachmentsHandlerInterface::class
+                    )
+                );
+            }
+        }
     }
 }
