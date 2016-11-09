@@ -12,8 +12,6 @@
 
 namespace BeSimple\SoapClient;
 
-use BeSimple\SoapCommon\SoapOptions\SoapOptions;
-
 /**
  * Provides a SoapClient instance.
  *
