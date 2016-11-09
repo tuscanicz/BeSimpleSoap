@@ -22,6 +22,7 @@ use BeSimple\SoapCommon\Storage\RequestHandlerAttachmentsStorage;
 use BeSimple\SoapServer\SoapOptions\SoapServerOptions;
 use BeSimple\SoapCommon\Converter\MtomTypeConverter;
 use BeSimple\SoapCommon\Converter\SwaTypeConverter;
+use Exception;
 use InvalidArgumentException;
 
 /**
@@ -62,16 +63,14 @@ class SoapServer extends \SoapServer
     /**
      * Custom handle method to be able to modify the SOAP messages.
      *
-     * @deprecated Please, use createRequest + handleRequest methods
-     * @param string $requestUrl
-     * @param string $soapAction
-     * @param string $requestContent = null
-     * @return string|false
+     * @deprecated
+     * @param string $request Request string
+     * @return string
      */
-    public function handle($requestUrl, $soapAction, $requestContent = null)
+    public function handle($request = null)
     {
-        return $this->handleRequest(
-            $this->createRequest($requestUrl, $soapAction, $requestContent)
+        throw new Exception(
+            'The handle method is now deprecated, because it accesses $_SERVER, $_POST. Use handleRequest instead'
         );
     }
 
