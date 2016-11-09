@@ -142,26 +142,30 @@ class Parser
      */
     private static function parseContentTypeHeader(PartHeader $part, $headerName, $headerValue)
     {
-        list($value, $remainder) = explode(';', $headerValue, 2);
-        $value = trim($value);
-        $part->setHeader($headerName, $value);
-        $remainder = trim($remainder);
-        while (strlen($remainder) > 0) {
-            if (!preg_match('/^([a-zA-Z0-9_-]+)=(.{1})/', $remainder, $matches)) {
-                break;
+        if (strpos($headerValue, ';')) {
+            list($value, $remainder) = explode(';', $headerValue, 2);
+            $value = trim($value);
+            $part->setHeader($headerName, $value);
+            $remainder = trim($remainder);
+            while (strlen($remainder) > 0) {
+                if (!preg_match('/^([a-zA-Z0-9_-]+)=(.{1})/', $remainder, $matches)) {
+                    break;
+                }
+                $name = $matches[1];
+                $delimiter = $matches[2];
+                $remainder = substr($remainder, strlen($name) + 1);
+                if (!preg_match('/([^;]+)(;)?(\s|$)?/', $remainder, $matches)) {
+                    break;
+                }
+                $value = rtrim($matches[1], ';');
+                if ($delimiter == "'" || $delimiter == '"') {
+                    $value = trim($value, $delimiter);
+                }
+                $part->setHeader($headerName, $name, $value);
+                $remainder = substr($remainder, strlen($matches[0]));
             }
-            $name = $matches[1];
-            $delimiter = $matches[2];
-            $remainder = substr($remainder, strlen($name)+1);
-            if (!preg_match('/([^;]+)(;)?(\s|$)?/', $remainder, $matches)) {
-                break;
-            }
-            $value = rtrim($matches[1], ';');
-            if ($delimiter == "'" || $delimiter == '"') {
-                $value = trim($value, $delimiter);
-            }
-            $part->setHeader($headerName, $name, $value);
-            $remainder = substr($remainder, strlen($matches[0]));
+        } else {
+            $part->setHeader($headerName, $headerValue);
         }
     }
 

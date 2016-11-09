@@ -117,6 +117,20 @@ class SoapServer extends \SoapServer
         }
     }
 
+    public function handleWsdlRequest(SoapRequest $soapRequest)
+    {
+        ob_start();
+        parent::handle();
+        $nativeSoapServerResponse = ob_get_clean();
+
+        return SoapResponseFactory::create(
+            $nativeSoapServerResponse,
+            $soapRequest->getLocation(),
+            $soapRequest->getAction(),
+            $soapRequest->getVersion()
+        );
+    }
+
     /**
      * Runs the currently registered request filters on the request, calls the
      * necessary functions (through the parent's class handle()) and runs the
