@@ -153,7 +153,7 @@ class SoapClient extends \SoapClient
         // HTTP headers
         $soapVersion = $soapRequest->getVersion();
         $soapAction = $soapRequest->getAction();
-        if (SOAP_1_1 == $soapVersion) {
+        if (SOAP_1_1 === $soapVersion) {
             $headers = [
                 'Content-Type:' . $soapRequest->getContentType(),
                 'SOAPAction: "' . $soapAction . '"',

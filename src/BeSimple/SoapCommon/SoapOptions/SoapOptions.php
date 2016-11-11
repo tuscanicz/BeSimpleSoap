@@ -130,7 +130,7 @@ class SoapOptions
         $optionsAsArray = [
             'soap_version' => $this->getSoapVersion(),
             'encoding' => $this->getEncoding(),
-            'features' => $this->getSoapFeatures(),
+            'features' => $this->getSoapFeatures()->getFeaturesSum(),
             'wsdl' => $this->getWsdlFile(),
             'cache_wsdl' => $this->getWsdlCacheType(),
             'classmap' => $this->getClassMap()->getAll(),
