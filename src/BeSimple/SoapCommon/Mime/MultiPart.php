@@ -117,6 +117,8 @@ class MultiPart extends PartHeader
         if ($isMain === true) {
             $this->mainPartContentId = $contentId;
             $this->setHeader('Content-Type', 'start', $part->getHeader('Content-ID'));
+        } else {
+            $part->setHeader('Content-Location', $contentId);
         }
         $this->parts[$contentId] = $part;
     }
