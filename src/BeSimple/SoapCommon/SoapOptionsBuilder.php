@@ -57,6 +57,7 @@ class SoapOptionsBuilder
         $soapOptions = new SoapOptions(
             SoapOptions::SOAP_VERSION_1_2,
             SoapOptions::SOAP_ENCODING_UTF8,
+            SoapOptions::SOAP_CONNECTION_KEEP_ALIVE_OFF,
             new SoapFeatures([
                 SoapFeatures::SINGLE_ELEMENT_ARRAYS
             ]),

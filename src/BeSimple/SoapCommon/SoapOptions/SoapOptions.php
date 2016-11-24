@@ -12,6 +12,8 @@ class SoapOptions
 {
     const SOAP_VERSION_1_1 = \SOAP_1_1;
     const SOAP_VERSION_1_2 = \SOAP_1_2;
+    const SOAP_CONNECTION_KEEP_ALIVE_ON = true;
+    const SOAP_CONNECTION_KEEP_ALIVE_OFF = false;
     const SOAP_ENCODING_UTF8 = 'UTF-8';
     const SOAP_SINGLE_ELEMENT_ARRAYS_OFF = 0;
     const SOAP_CACHE_TYPE_NONE = Cache::TYPE_NONE;
@@ -23,19 +25,21 @@ class SoapOptions
     const SOAP_ATTACHMENTS_TYPE_MTOM = Helper::ATTACHMENTS_TYPE_MTOM;
     const SOAP_ATTACHMENTS_TYPE_SWA = Helper::ATTACHMENTS_TYPE_SWA;
 
-    protected $soapVersion;
-    protected $encoding;
-    protected $soapFeatures;
-    protected $wsdlFile;
-    protected $wsdlCacheType;
-    protected $wsdlCacheDir;
-    protected $classMap;
-    protected $typeConverterCollection;
-    protected $attachmentType;
+    private $soapVersion;
+    private $encoding;
+    private $connectionKeepAlive;
+    private $soapFeatures;
+    private $wsdlFile;
+    private $wsdlCacheType;
+    private $wsdlCacheDir;
+    private $classMap;
+    private $typeConverterCollection;
+    private $attachmentType;
 
     /**
-     * @param SoapOptions::SOAP_VERSION_1_1|SoapOptions::SOAP_VERSION_1_2 $soapVersion
+     * @param int $soapVersion = SoapOptions::SOAP_VERSION_1_1|SoapOptions::SOAP_VERSION_1_2
      * @param string $encoding = SoapOptions::SOAP_ENCODING_UTF8
+     * @param bool $connectionKeepAlive = SoapOptions::SOAP_CONNECTION_KEEP_ALIVE_ON|SoapOptions::SOAP_CONNECTION_KEEP_ALIVE_OFF
      * @param SoapFeatures $features
      * @param string $wsdlFile
      * @param int $wsdlCacheType = SoapOptions::SOAP_CACHE_TYPE_NONE|SoapOptions::SOAP_CACHE_TYPE_MEMORY|SoapOptions::SOAP_CACHE_TYPE_DISK|SoapOptions::SOAP_CACHE_TYPE_DISK_MEMORY
@@ -47,6 +51,7 @@ class SoapOptions
     public function __construct(
         $soapVersion,
         $encoding,
+        $connectionKeepAlive,
         SoapFeatures $features,
         $wsdlFile,
         $wsdlCacheType,
@@ -57,6 +62,7 @@ class SoapOptions
     ) {
         $this->soapVersion = $soapVersion;
         $this->encoding = $encoding;
+        $this->connectionKeepAlive = $connectionKeepAlive;
         $this->soapFeatures = $features;
         $this->wsdlFile = $wsdlFile;
         $this->wsdlCacheType = $wsdlCacheType;
@@ -73,6 +79,11 @@ class SoapOptions
     public function getEncoding()
     {
         return $this->encoding;
+    }
+
+    public function isConnectionKeepAlive()
+    {
+        return $this->connectionKeepAlive;
     }
 
     public function getWsdlFile()
@@ -135,6 +146,7 @@ class SoapOptions
             'cache_wsdl' => $this->getWsdlCacheType(),
             'classmap' => $this->getClassMap()->getAll(),
             'typemap' => $this->getTypeConverterCollection()->getTypemap(),
+            'keep_alive' => $this->isConnectionKeepAlive(),
         ];
         if ($this->hasWsdlCacheDir()) {
             $optionsAsArray['wsdl_cache_dir'] = $this->getWsdlCacheDir();
