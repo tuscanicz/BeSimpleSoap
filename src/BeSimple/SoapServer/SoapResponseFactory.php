@@ -52,7 +52,7 @@ class SoapResponseFactory
      * @param SoapAttachment[] $attachments SOAP attachments
      * @return Part[]
      */
-    private function createAttachmentParts(array $attachments = [])
+    private static function createAttachmentParts(array $attachments = [])
     {
         $parts = [];
         foreach ($attachments as $attachment) {

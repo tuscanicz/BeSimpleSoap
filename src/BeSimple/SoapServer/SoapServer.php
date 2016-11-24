@@ -146,7 +146,7 @@ class SoapServer extends \SoapServer
         $handler = $this->soapServerOptions->getHandler();
 
         if ($this->soapOptions->hasAttachments()) {
-            $this->injectAttachmentStorage($handler, $soapRequest, $this->soapOptions->getAttachmentType());
+            $this->injectAttachmentStorage($handler, $soapRequest);
         }
 
         ob_start();
@@ -200,14 +200,14 @@ class SoapServer extends \SoapServer
         return $soapResponse;
     }
 
-    private function injectAttachmentStorage(AttachmentsHandlerInterface $handler, SoapRequest $soapRequest, $attachmentType)
+    private function injectAttachmentStorage(AttachmentsHandlerInterface $handler, SoapRequest $soapRequest)
     {
         $attachments = [];
         if ($soapRequest->hasAttachments()) {
             foreach ($soapRequest->getAttachments() as $attachment) {
                 $attachments[] = new SoapAttachment(
                     $attachment->getHeader('Content-Disposition', 'filename'),
-                    $attachmentType,
+                    $attachment->getHeader('Content-Type'),
                     $attachment->getContent()
                 );
             }
