@@ -163,6 +163,6 @@ class Part extends PartHeader
      */
     protected function generateContentId()
     {
-        return 'urn:uuid:' . Helper::generateUUID();
+        return 'part-' . Helper::generateUUID() . '@response.info';
     }
 }
