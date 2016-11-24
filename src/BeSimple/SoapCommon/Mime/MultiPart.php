@@ -179,6 +179,6 @@ class MultiPart extends PartHeader
      */
     public function generateBoundary()
     {
-        return 'urn:uuid:' . Helper::generateUUID();
+        return 'multipart-boundary-' . Helper::generateUUID() . '@response.info';
     }
 }
