@@ -125,7 +125,7 @@ class Part extends PartHeader
      */
     public function getMessagePart()
     {
-        return $this->generateHeaders() . "\r\n" . $this->generateBody();
+        return $this->generateHeaders() . "\n" . $this->generateBody();
     }
 
     /**
@@ -152,7 +152,7 @@ class Part extends PartHeader
             case self::ENCODING_SEVEN_BIT:
             case self::ENCODING_EIGHT_BIT:
             default:
-                return preg_replace("/\r\n|\r|\n/", "\r\n", $content);
+                return preg_replace("/\r\n|\r|\n/", "\n", $content);
         }
     }
 
