@@ -30,7 +30,7 @@ use InvalidArgumentException;
  *
  * @author Andreas Schamberger <mail@andreass.net>
  * @author Christian Kerl <christian-kerl@web.de>
- * @author Petr Bechyně <petr.bechyne@vodafone.com>
+ * @author Petr Bechyně <mail@petrbechyne.com>
  */
 class SoapServer extends \SoapServer
 {
@@ -85,16 +85,15 @@ class SoapServer extends \SoapServer
      */
     public function createRequest($requestUrl, $soapAction, $requestContentType, $requestContent = null)
     {
-        $soapRequest = SoapRequestFactory::create(
+        $soapRequest = SoapRequestFactory::createWithContentType(
             $requestUrl,
             $soapAction,
             $this->soapVersion,
             $requestContentType,
             $requestContent
         );
-        $soapKernel = new SoapKernel();
         if ($this->soapOptions->hasAttachments()) {
-            $soapRequest = $soapKernel->filterRequest(
+            $soapRequest = SoapKernel::filterRequest(
                 $soapRequest,
                 $this->getAttachmentFilters(),
                 $this->soapOptions->getAttachmentType()
@@ -180,7 +179,7 @@ class SoapServer extends \SoapServer
      * @param SoapAttachment[] $attachments
      * @return SoapResponse
      */
-    private function createResponse($requestLocation, $soapAction, $soapVersion, $responseContent = null, $attachments = [])
+    private function createResponse($requestLocation, $soapAction, $soapVersion, $responseContent = null, array $attachments = [])
     {
         $soapResponse = SoapResponseFactory::create(
             $responseContent,
@@ -189,9 +188,8 @@ class SoapServer extends \SoapServer
             $soapVersion,
             $attachments
         );
-        $soapKernel = new SoapKernel();
         if ($this->soapOptions->hasAttachments()) {
-            $soapResponse = $soapKernel->filterResponse(
+            $soapResponse = SoapKernel::filterResponse(
                 $soapResponse,
                 $this->getAttachmentFilters(),
                 $this->soapOptions->getAttachmentType()

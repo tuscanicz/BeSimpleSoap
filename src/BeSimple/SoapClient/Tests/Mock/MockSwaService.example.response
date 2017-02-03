@@ -1,0 +1,18 @@
+
+--Part_13_58a1b01a466a6.58a1b01a466e8
+Content-Type: application/soap+xml; charset=utf-8
+Content-Transfer-Encoding: 8bit
+Content-ID: <part-72f5d209-2631-42ee-81d1-e554af739ce6@response.info>
+
+<?xml version="1.0" encoding="UTF-8"?>
+<env:Envelope xmlns:env="http://www.w3.org/2003/05/soap-envelope" xmlns:ns1="http://schema.testcase"><env:Body xmlns:rpc="http://www.w3.org/2003/05/soap-rpc"><ns1:generateTestResponse><rpc:result>generateTestReturn</rpc:result><generateTestReturn><fileName>dummy-attachment.txt</fileName></generateTestReturn></ns1:generateTestResponse></env:Body></env:Envelope>
+
+--Part_13_58a1b01a466a6.58a1b01a466e8
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
+Content-ID: <dummy-attachment.txt>
+Content-Location: dummy-attachment.txt
+
+Hello world!
+
+--Part_13_58a1b01a466a6.58a1b01a466e8--

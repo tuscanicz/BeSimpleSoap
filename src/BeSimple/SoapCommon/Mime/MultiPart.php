@@ -181,4 +181,9 @@ class MultiPart extends PartHeader
     {
         return 'multipart-boundary-' . Helper::generateUUID() . '@response.info';
     }
+
+    public function getMainPartContentId()
+    {
+        return $this->mainPartContentId;
+    }
 }

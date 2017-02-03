@@ -23,43 +23,43 @@ class ClassMapTest extends \PHPUnit_Framework_TestCase
 {
     public function testAll()
     {
-        $classmap = new ClassMap();
+        $classMap = new ClassMap();
 
-        $this->assertSame(array(), $classmap->getAll());
+        $this->assertSame([], $classMap->getAll());
     }
 
     public function testAdd()
     {
-        $classmap = new ClassMap();
+        $classMap = new ClassMap();
 
-        $classmap->add('foobar', 'BeSimple\SoapCommon\ClassMap');
+        $classMap->add('foobar', 'BeSimple\SoapCommon\ClassMap');
 
         $this->setExpectedException('InvalidArgumentException');
-        $classmap->add('foobar', 'BeSimple\SoapCommon\ClassMap');
+        $classMap->add('foobar', 'BeSimple\SoapCommon\ClassMap');
     }
 
     public function testGet()
     {
-        $classmap = new ClassMap();
+        $classMap = new ClassMap();
 
-        $classmap->add('foobar', 'BeSimple\SoapCommon\ClassMap');
-        $this->assertSame('BeSimple\SoapCommon\ClassMap', $classmap->get('foobar'));
+        $classMap->add('foobar', 'BeSimple\SoapCommon\ClassMap');
+        $this->assertSame('BeSimple\SoapCommon\ClassMap', $classMap->get('foobar'));
 
-        $this->setExpectedException('InvalidArgumentException');
-        $classmap->get('bar');
+        $this->setExpectedException('Exception');
+        $classMap->get('bar');
     }
 
     public function testAddClassMap()
     {
-        $classmap1 = new ClassMap();
-        $classmap2 = new ClassMap();
+        $classMap1 = new ClassMap();
+        $classMap2 = new ClassMap();
 
-        $classmap2->add('foobar', 'BeSimple\SoapCommon\ClassMap');
-        $classmap1->addClassMap($classmap2);
+        $classMap2->add('foobar', 'BeSimple\SoapCommon\ClassMap');
+        $classMap1->addClassMap($classMap2);
 
-        $this->assertEquals(array('foobar' => 'BeSimple\SoapCommon\ClassMap'), $classmap1->getAll());
+        $this->assertEquals(['foobar' => 'BeSimple\SoapCommon\ClassMap'], $classMap1->getAll());
 
-        $this->setExpectedException('InvalidArgumentException');
-        $classmap1->addClassMap($classmap2);
+        $this->setExpectedException('Exception');
+        $classMap1->addClassMap($classMap2);
     }
 }

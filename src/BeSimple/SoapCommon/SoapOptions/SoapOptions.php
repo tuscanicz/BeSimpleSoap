@@ -66,6 +66,7 @@ class SoapOptions
         $this->soapFeatures = $features;
         $this->wsdlFile = $wsdlFile;
         $this->wsdlCacheType = $wsdlCacheType;
+        $this->wsdlCacheDir = $wsdlCacheDir;
         $this->classMap = $classMap;
         $this->typeConverterCollection = $typeConverterCollection;
         $this->attachmentType = $attachmentType;

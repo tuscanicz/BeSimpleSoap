@@ -12,8 +12,13 @@
 
 namespace BeSimple\SoapClient;
 
+use BeSimple\SoapClient\Curl\Curl;
 use BeSimple\SoapCommon\Cache;
 use BeSimple\SoapCommon\Helper;
+use DOMDocument;
+use DOMElement;
+use DOMXPath;
+use Exception;
 
 /**
  * Downloads WSDL files with cURL. Uses the WSDL_CACHE_* constants and the
@@ -25,148 +30,179 @@ use BeSimple\SoapCommon\Helper;
  */
 class WsdlDownloader
 {
-    protected $curl;
-    protected $resolveRemoteIncludes = true;
-    protected $cacheEnabled;
-    protected $cacheDir;
-    protected $cacheTtl;
-
     /**
      * @param Curl $curl
-     * @param int $cacheWsdl = Cache::TYPE_NONE|Cache::WSDL_CACHE_DISK|Cache::WSDL_CACHE_BOTH|Cache::WSDL_CACHE_MEMORY
+     * @param string $wsdlPath WSDL file URL/path
+     * @param int $wsdCacheType = Cache::TYPE_NONE|Cache::WSDL_CACHE_DISK|Cache::WSDL_CACHE_BOTH|Cache::WSDL_CACHE_MEMORY
      * @param boolean $resolveRemoteIncludes
-     */
-    public function __construct(Curl $curl, $cacheWsdl, $resolveRemoteIncludes = true)
-    {
-        $this->curl = $curl;
-        $this->resolveRemoteIncludes = $resolveRemoteIncludes;
-
-        $this->cacheEnabled = $cacheWsdl === Cache::TYPE_NONE ? Cache::DISABLED : Cache::ENABLED == Cache::isEnabled();
-        $this->cacheDir = Cache::getDirectory();
-        $this->cacheTtl = Cache::getLifetime();
-    }
-
-    /**
-     * Download given WSDL file and return name of cache file.
-     *
-     * @param string $wsdl WSDL file URL/path
-     *
      * @return string
      */
-    public function download($wsdl)
+    public function getWsdlPath(Curl $curl, $wsdlPath, $wsdCacheType, $resolveRemoteIncludes = true)
     {
-        // download and cache remote WSDL files or local ones where we want to
-        // resolve remote XSD includes
-        $isRemoteFile = $this->isRemoteFile($wsdl);
-        if ($isRemoteFile || $this->resolveRemoteIncludes) {
-            $cacheFilePath = $this->cacheDir.DIRECTORY_SEPARATOR.'wsdl_'.md5($wsdl).'.cache';
-
-            if (!$this->cacheEnabled || !file_exists($cacheFilePath) || (filemtime($cacheFilePath) + $this->cacheTtl) < time()) {
-                if ($isRemoteFile) {
-                    // execute request
-                    $responseSuccessfull = $this->curl->exec($wsdl);
-                    // get content
-                    if ($responseSuccessfull) {
-                        $response = $this->curl->getResponseBody();
-
-                        if ($this->resolveRemoteIncludes) {
-                            $this->resolveRemoteIncludes($response, $cacheFilePath, $wsdl);
-                        } else {
-                            file_put_contents($cacheFilePath, $response);
-                        }
-                    } else {
-                        throw new \ErrorException("SOAP-ERROR: Parsing WSDL: Couldn't load from '" . $wsdl ."'");
-                    }
-                } elseif (file_exists($wsdl)) {
-                    $response = file_get_contents($wsdl);
-                    $this->resolveRemoteIncludes($response, $cacheFilePath);
-                } else {
-                    throw new \ErrorException("SOAP-ERROR: Parsing WSDL: Couldn't load from '" . $wsdl ."'");
+        $isRemoteFile = $this->isRemoteFile($wsdlPath);
+        $isCacheEnabled = $wsdCacheType === Cache::TYPE_NONE ? false : Cache::isEnabled();
+        if ($isCacheEnabled === true) {
+            $cacheFilePath = Cache::getDirectory().DIRECTORY_SEPARATOR.'wsdl_'.md5($wsdlPath).'.cache';
+            $isCacheExisting = file_exists($cacheFilePath);
+            if ($isCacheExisting) {
+                $fileModificationTime = filemtime($cacheFilePath);
+                if ($fileModificationTime === false) {
+                    throw new Exception('File modification time could not be get for wsdl path: ' . $cacheFilePath);
                 }
+                $isCacheValid = ($fileModificationTime + Cache::getLifetime()) >= time();
+            } else {
+                $isCacheExisting = $isCacheValid = false;
+            }
+            if ($isCacheExisting === false || $isCacheValid === false) {
+                $this->writeCacheFile($curl, $wsdCacheType, $wsdlPath, $cacheFilePath, $resolveRemoteIncludes, $isRemoteFile);
             }
 
-            return $cacheFilePath;
-        } elseif (file_exists($wsdl)) {
-            return realpath($wsdl);
-        }
+            return $this->getLocalWsdlPath($cacheFilePath);
 
-        throw new \ErrorException("SOAP-ERROR: Parsing WSDL: Couldn't load from '" . $wsdl ."'");
+        } else {
+
+            if ($isRemoteFile === true) {
+                return $wsdlPath;
+            }
+
+            return $this->getLocalWsdlPath($wsdlPath);
+        }
+    }
+
+    private function writeCacheFile(Curl $curl, $cacheType, $wsdlPath, $cacheFilePath, $resolveRemoteIncludes, $isRemoteFile)
+    {
+        if ($isRemoteFile === true) {
+            $curlResponse = $curl->executeCurlWithCachedSession($wsdlPath);
+            if ($curlResponse->curlStatusSuccess()) {
+                if (mb_strlen($curlResponse->getResponseBody()) === 0) {
+                    throw new Exception('Could not write WSDL cache file: curl response empty');
+                }
+                if ($resolveRemoteIncludes === true) {
+                    $document = $this->getXmlFileDOMDocument($curl, $cacheType, $curlResponse->getResponseBody(), $wsdlPath);
+                    $this->saveXmlDOMDocument($document, $cacheFilePath);
+                } else {
+                    file_put_contents($cacheFilePath, $curlResponse->getResponseBody());
+                }
+            } else {
+                throw new Exception('Could not write WSDL cache file: Download failed with message: '.$curlResponse->getCurlErrorMessage());
+            }
+        } else {
+            if (file_exists($wsdlPath)) {
+                $document = $this->getXmlFileDOMDocument($curl, $cacheType, file_get_contents($wsdlPath));
+                $this->saveXmlDOMDocument($document, $cacheFilePath);
+            } else {
+                throw new Exception('Could write WSDL cache file: local file does not exist: '.$wsdlPath);
+            }
+        }
+    }
+
+    private function getLocalWsdlPath($wsdlPath)
+    {
+        if (file_exists($wsdlPath)) {
+
+            return realpath($wsdlPath);
+
+        } else {
+            throw new Exception('Could not download WSDL: local file does not exist: '.$wsdlPath);
+        }
     }
 
     /**
-     * Do we have a remote file?
-     *
-     * @param string $file File URL/path
-     *
+     * @param string $wsdlPath File URL/path
      * @return boolean
      */
-    private function isRemoteFile($file)
+    private function isRemoteFile($wsdlPath)
     {
-        // @parse_url to suppress E_WARNING for invalid urls
-        if (false !== $url = @parse_url($file)) {
-            if (isset($url['scheme']) && 'http' === substr($url['scheme'], 0, 4)) {
+        $parsedUrlOrFalse = @parse_url($wsdlPath);
+        if ($parsedUrlOrFalse !== false) {
+            if (isset($parsedUrlOrFalse['scheme']) && substr($parsedUrlOrFalse['scheme'], 0, 4) === 'http') {
+
                 return true;
+
+            } else {
+
+                return false;
             }
         }
 
-        return false;
+        throw new Exception('Could not determine wsdlPath is remote: '.$wsdlPath);
     }
 
     /**
      * Resolves remote WSDL/XSD includes within the WSDL files.
      *
-     * @param string  $xml            XML file
-     * @param string  $cacheFilePath  Cache file name
+     * @param Curl $curl
+     * @param int $cacheType
+     * @param string  $xmlFileSource  XML file contents
      * @param boolean $parentFilePath Parent file name
-     *
-     * @return void
+     * @return DOMDocument
      */
-    private function resolveRemoteIncludes($xml, $cacheFilePath, $parentFilePath = null)
+    private function getXmlFileDOMDocument(Curl $curl, $cacheType, $xmlFileSource, $parentFilePath = null)
     {
-        $doc = new \DOMDocument();
-        $doc->loadXML($xml);
+        $document = new DOMDocument('1.0', 'utf-8');
+        if ($document->loadXML($xmlFileSource) === false) {
+            throw new Exception('Could not save downloaded WSDL cache: '.$xmlFileSource);
+        }
 
-        $xpath = new \DOMXPath($doc);
-        $xpath->registerNamespace(Helper::PFX_XML_SCHEMA, Helper::NS_XML_SCHEMA);
-        $xpath->registerNamespace(Helper::PFX_WSDL, Helper::NS_WSDL);
+        $xpath = new DOMXPath($document);
+        $this->updateXmlDocument($curl, $cacheType, $xpath, Helper::PFX_WSDL, Helper::NS_WSDL, 'location', $parentFilePath);
+        $this->updateXmlDocument($curl, $cacheType, $xpath, Helper::PFX_XML_SCHEMA, Helper::NS_XML_SCHEMA, 'schemaLocation', $parentFilePath);
 
-        // WSDL include/import
-        $query = './/'.Helper::PFX_WSDL.':include | .//'.Helper::PFX_WSDL.':import';
-        $nodes = $xpath->query($query);
+        return $document;
+    }
+
+    private function saveXmlDOMDocument(DOMDocument $document, $cacheFilePath)
+    {
+        try {
+            $xmlContents = $document->saveXML();
+            if ($xmlContents === '') {
+                throw new Exception('Could not write WSDL cache file: DOMDocument returned empty XML file');
+            }
+            file_put_contents($cacheFilePath, $xmlContents);
+        } catch (Exception $e) {
+            unlink($cacheFilePath);
+            throw new Exception('Could not write WSDL cache file: save method returned error: ' . $e->getMessage());
+        }
+    }
+
+    private function updateXmlDocument(
+        Curl $curl,
+        $cacheType,
+        DOMXPath $xpath,
+        $schemaPrefix,
+        $schemaUrl,
+        $locationAttributeName,
+        $parentFilePath = null
+    ) {
+        $xpath->registerNamespace($schemaPrefix, $schemaUrl);
+        $nodes = $xpath->query('.//'.$schemaPrefix.':include | .//'.$schemaPrefix.':import');
         if ($nodes->length > 0) {
             foreach ($nodes as $node) {
-                $location = $node->getAttribute('location');
-                if ($this->isRemoteFile($location)) {
-                    $location = $this->download($location);
-                    $node->setAttribute('location', $location);
-                } elseif (null !== $parentFilePath) {
-                    $location = $this->resolveRelativePathInUrl($parentFilePath, $location);
-                    $location = $this->download($location);
-                    $node->setAttribute('location', $location);
+                /** @var DOMElement $node */
+                $locationPath = $node->getAttribute($locationAttributeName);
+                if ($this->isRemoteFile($locationPath)) {
+                    $node->setAttribute(
+                        $locationAttributeName,
+                        $this->getWsdlPath(
+                            $curl,
+                            $locationPath,
+                            $cacheType,
+                            true
+                        )
+                    );
+                } else if ($parentFilePath !== null) {
+                    $node->setAttribute(
+                        $locationAttributeName,
+                        $this->getWsdlPath(
+                            $curl,
+                            $this->resolveRelativePathInUrl($parentFilePath, $locationPath),
+                            $cacheType,
+                            true
+                        )
+                    );
                 }
             }
         }
-
-        // XML schema include/import
-        $query = './/'.Helper::PFX_XML_SCHEMA.':include | .//'.Helper::PFX_XML_SCHEMA.':import';
-        $nodes = $xpath->query($query);
-        if ($nodes->length > 0) {
-            foreach ($nodes as $node) {
-                if ($node->hasAttribute('schemaLocation')) {
-                    $schemaLocation = $node->getAttribute('schemaLocation');
-                    if ($this->isRemoteFile($schemaLocation)) {
-                        $schemaLocation = $this->download($schemaLocation);
-                        $node->setAttribute('schemaLocation', $schemaLocation);
-                    } elseif (null !== $parentFilePath) {
-                        $schemaLocation = $this->resolveRelativePathInUrl($parentFilePath, $schemaLocation);
-                        $schemaLocation = $this->download($schemaLocation);
-                        $node->setAttribute('schemaLocation', $schemaLocation);
-                    }
-                }
-            }
-        }
-
-        $doc->save($cacheFilePath);
     }
 
     /**
@@ -205,9 +241,8 @@ class WsdlDownloader
 
         // resolve /../
         foreach ($parts as $key => $part) {
-            if ('..' === $part) {
+            if ($part === '..') {
                 $keyToDelete = $key - 1;
-
                 while ($keyToDelete > 0) {
                     if (isset($parts[$keyToDelete])) {
                         unset($parts[$keyToDelete]);

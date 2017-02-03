@@ -13,24 +13,30 @@
 namespace BeSimple\SoapServer;
 
 use BeSimple\SoapBundle\Soap\SoapAttachment;
-use BeSimple\SoapCommon\Mime\Part;
+use BeSimple\SoapClient\SoapResponseTracingData;
+use BeSimple\SoapCommon\Mime\PartFactory;
 use BeSimple\SoapCommon\SoapMessage;
 
 class SoapResponseFactory
 {
     /**
-     * Factory function for SoapResponse.
+     * Factory function for SoapServer\SoapResponse.
      *
-     * @param string $content  Content
-     * @param string $location Location
-     * @param string $action   SOAP action
-     * @param string $version  SOAP version
-     * @param SoapAttachment[] $attachments SOAP attachments
+     * @param string                    $content        Content
+     * @param string                    $location       Location
+     * @param string                    $action         SOAP action
+     * @param string                    $version        SOAP version
+     * @param SoapAttachment[]          $attachments    SOAP attachments
      *
      * @return SoapResponse
      */
-    public static function create($content, $location, $action, $version, $attachments = [])
-    {
+    public static function create(
+        $content,
+        $location,
+        $action,
+        $version,
+        array $attachments = []
+    ) {
         $response = new SoapResponse();
         $response->setContent($content);
         $response->setLocation($location);
@@ -38,10 +44,9 @@ class SoapResponseFactory
         $response->setVersion($version);
         $contentType = SoapMessage::getContentTypeForVersion($version);
         $response->setContentType($contentType);
-
         if (count($attachments) > 0) {
             $response->setAttachments(
-                self::createAttachmentParts($attachments)
+                PartFactory::createAttachmentParts($attachments)
             );
         }
 
@@ -49,23 +54,39 @@ class SoapResponseFactory
     }
 
     /**
-     * @param SoapAttachment[] $attachments SOAP attachments
-     * @return Part[]
+     * Factory function for SoapServer\SoapResponse.
+     *
+     * @param string                    $content        Content
+     * @param string                    $location       Location
+     * @param string                    $action         SOAP action
+     * @param string                    $version        SOAP version
+     * @param SoapResponseTracingData   $tracingData    Data value object suitable for tracing SOAP traffic
+     * @param SoapAttachment[]          $attachments    SOAP attachments
+     *
+     * @return SoapResponse
      */
-    private static function createAttachmentParts(array $attachments = [])
-    {
-        $parts = [];
-        foreach ($attachments as $attachment) {
-            $part = new Part(
-                $attachment->getContent(),
-                'application/pdf',
-                'utf-8',
-                Part::ENCODING_BINARY,
-                $attachment->getId()
+    public static function createWithTracingData(
+        $content,
+        $location,
+        $action,
+        $version,
+        SoapResponseTracingData $tracingData,
+        array $attachments = []
+    ) {
+        $response = new SoapResponse();
+        $response->setContent($content);
+        $response->setLocation($location);
+        $response->setAction($action);
+        $response->setVersion($version);
+        $response->setTracingData($tracingData);
+        $contentType = SoapMessage::getContentTypeForVersion($version);
+        $response->setContentType($contentType);
+        if (count($attachments) > 0) {
+            $response->setAttachments(
+                PartFactory::createAttachmentParts($attachments)
             );
-            $parts[] = $part;
         }
 
-        return $parts;
+        return $response;
     }
 }

@@ -19,7 +19,7 @@ use BeSimple\SoapCommon\Mime\Part as MimePart;
 use BeSimple\SoapCommon\Mime\Part;
 use BeSimple\SoapCommon\SoapRequest;
 use BeSimple\SoapCommon\SoapRequestFilter;
-use BeSimple\SoapCommon\SoapResponse;
+use BeSimple\SoapCommon\SoapResponse as CommonSoapResponse;
 use BeSimple\SoapCommon\SoapResponseFilter;
 
 /**
@@ -47,7 +47,7 @@ class MimeFilter implements SoapRequestFilter, SoapResponseFilter
         return $request;
     }
 
-    public function filterResponse(SoapResponse $response, $attachmentType)
+    public function filterResponse(CommonSoapResponse $response, $attachmentType)
     {
         $attachmentsToSend = $response->getAttachments();
         if (count($attachmentsToSend) > 0) {

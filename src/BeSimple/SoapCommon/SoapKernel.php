@@ -8,7 +8,7 @@ namespace BeSimple\SoapCommon;
  * the chain-of-responsibility pattern).
  *
  * @author Christian Kerl <christian-kerl@web.de>
- * @author Petr Bechyně <petr.bechyne@vodafone.com>
+ * @author Petr Bechyně <mail@petrbechyne.com>
  */
 class SoapKernel
 {
@@ -20,7 +20,7 @@ class SoapKernel
      * @param int $attachmentType = SoapOptions::SOAP_ATTACHMENTS_TYPE_SWA|SoapOptions::ATTACHMENTS_TYPE_MTOM|SoapOptions::ATTACHMENTS_TYPE_BASE64
      * @return SoapRequest
      */
-    public function filterRequest(SoapRequest $request, array $filters, $attachmentType)
+    public static function filterRequest(SoapRequest $request, array $filters, $attachmentType)
     {
         foreach ($filters as $filter) {
             if ($filter instanceof SoapRequestFilter) {
@@ -37,9 +37,9 @@ class SoapKernel
      * @param SoapResponse $response SOAP response
      * @param SoapRequestFilter[]|SoapResponseFilter[] $filters
      * @param int $attachmentType = SoapOptions::SOAP_ATTACHMENTS_TYPE_SWA|SoapOptions::ATTACHMENTS_TYPE_MTOM|SoapOptions::ATTACHMENTS_TYPE_BASE64
-     * @return SoapResponse
+     * @return \BeSimple\SoapClient\SoapResponse|\BeSimple\SoapServer\SoapResponse
      */
-    public function filterResponse(SoapResponse $response, array $filters, $attachmentType)
+    public static function filterResponse(SoapResponse $response, array $filters, $attachmentType)
     {
         foreach ($filters as $filter) {
             if ($filter instanceof SoapResponseFilter) {

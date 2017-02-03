@@ -1,0 +1,23 @@
+# HOW TO PREPARE Mock SWA Service
+
+1. Create an test endpoint by using tools such as mockable.io, that will return response (expect POST requests with SOAP v1.1)
+similar to the one provided in example file src/BeSimple/SoapClient/Tests/Mock/MockSwaService.example.response
+and Content-Type headers from src/BeSimple/SoapClient/Tests/Mock/MockSwaService.example.response.headers
+
+Example Endpoint URL: https://demo0580999.mockable.io/soap/testGenerator
+
+2. Create a test WSDL endpoint that will return WSDL file from (expect GET requests)
+an example file src/BeSimple/SoapClient/Tests/Mock/MockSwaService.wsdl
+
+Example WSDL endpoint URL: https://demo0580999.mockable.io/soap/testGenerator?WSDL
+
+3. Take the two endpoints and configure SoapClientBuilderTest::TEST_ENDPOINT_SWA
+and SoapClientBuilderTest::TEST_REMOTE_WSDL_SWA variables
+
+4. The test BeSimple\SoapClient\Tests\SoapClientBuilderTest::testSoapCallSwaWithAttachmentsOnResponse should work correctly.
+
+If not, try to catch SoapFaultWithTracingData thrown by the soapCall method:
+
+$soapClient->soapCall('generateTest', [$generateTestRequest]);
+
+You can print the SoapFaultWithTracingData attributes in order to investigate the SoapClient request and request headers.

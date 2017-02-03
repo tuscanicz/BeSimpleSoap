@@ -23,11 +23,6 @@ use BeSimple\SoapCommon\Mime\Part as MimePart;
 class MtomTypeConverter implements TypeConverterInterface
 {
     /**
-     * @var \BeSimple\SoapCommon\SoapKernel $soapKernel SoapKernel instance
-     */
-    protected $soapKernel = null;
-
-    /**
      * {@inheritDoc}
      */
     public function getTypeNamespace()
