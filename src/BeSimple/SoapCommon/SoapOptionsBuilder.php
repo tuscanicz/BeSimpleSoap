@@ -18,11 +18,11 @@ use BeSimple\SoapCommon\SoapOptions\SoapOptions;
 use InvalidArgumentException;
 
 /**
- * @author Petr Bechyně <petr.bechyne@vodafone.com>
+ * @author Petr Bechyně <mail@petrbechyne.com>
  */
 class SoapOptionsBuilder
 {
-    static public function createWithDefaults(
+    public static function createWithDefaults(
         $wsdlFile,
         $wsdlCacheType = SoapOptions::SOAP_CACHE_TYPE_NONE,
         $wsdlCacheDir = null
@@ -30,16 +30,37 @@ class SoapOptionsBuilder
         return self::createWithClassMap($wsdlFile, new ClassMap(), $wsdlCacheType, $wsdlCacheDir);
     }
 
-    static public function createSwaWithClassMap(
+    public static function createSwaWithClassMap(
         $wsdlFile,
         ClassMap $classMap,
         $wsdlCacheType = SoapOptions::SOAP_CACHE_TYPE_NONE,
         $wsdlCacheDir = null
     ) {
-        return self::createWithClassMap($wsdlFile, $classMap, $wsdlCacheType, $wsdlCacheDir, SoapOptions::SOAP_ATTACHMENTS_TYPE_SWA);
+        return self::createWithClassMap(
+            $wsdlFile,
+            $classMap,
+            $wsdlCacheType,
+            $wsdlCacheDir,
+            SoapOptions::SOAP_ATTACHMENTS_TYPE_SWA
+        );
     }
 
-    static public function createWithClassMap(
+    public static function createSwaWithClassMapV11(
+        $wsdlFile,
+        ClassMap $classMap,
+        $wsdlCacheType = SoapOptions::SOAP_CACHE_TYPE_NONE,
+        $wsdlCacheDir = null
+    ) {
+        return self::createWithClassMapV11(
+            $wsdlFile,
+            $classMap,
+            $wsdlCacheType,
+            $wsdlCacheDir,
+            SoapOptions::SOAP_ATTACHMENTS_TYPE_SWA
+        );
+    }
+
+    public static function createWithClassMap(
         $wsdlFile,
         ClassMap $classMap,
         $wsdlCacheType = SoapOptions::SOAP_CACHE_TYPE_NONE,
@@ -54,7 +75,8 @@ class SoapOptionsBuilder
                 throw new InvalidArgumentException('Cache dir must be set for this wsdl cache type');
             }
         }
-        $soapOptions = new SoapOptions(
+
+        return new SoapOptions(
             SoapOptions::SOAP_VERSION_1_2,
             SoapOptions::SOAP_ENCODING_UTF8,
             SoapOptions::SOAP_CONNECTION_KEEP_ALIVE_OFF,
@@ -68,7 +90,37 @@ class SoapOptionsBuilder
             new TypeConverterCollection(),
             $attachmentType
         );
+    }
 
-        return $soapOptions;
+    public static function createWithClassMapV11(
+        $wsdlFile,
+        ClassMap $classMap,
+        $wsdlCacheType = SoapOptions::SOAP_CACHE_TYPE_NONE,
+        $wsdlCacheDir = null,
+        $attachmentType = null
+    ) {
+        if (!Cache::hasType($wsdlCacheType)) {
+            throw new InvalidArgumentException('Invalid cache type');
+        }
+        if ($wsdlCacheType !== SoapOptions::SOAP_CACHE_TYPE_NONE) {
+            if ($wsdlCacheDir === null) {
+                throw new InvalidArgumentException('Cache dir must be set for this wsdl cache type');
+            }
+        }
+
+        return new SoapOptions(
+            SoapOptions::SOAP_VERSION_1_1,
+            SoapOptions::SOAP_ENCODING_UTF8,
+            SoapOptions::SOAP_CONNECTION_KEEP_ALIVE_OFF,
+            new SoapFeatures([
+                SoapFeatures::SINGLE_ELEMENT_ARRAYS
+            ]),
+            $wsdlFile,
+            $wsdlCacheType,
+            $wsdlCacheDir,
+            $classMap,
+            new TypeConverterCollection(),
+            $attachmentType
+        );
     }
 }

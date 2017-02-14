@@ -12,7 +12,8 @@
 
 namespace BeSimple\SoapClient\Tests;
 
-use BeSimple\SoapClient\Curl;
+use BeSimple\SoapClient\Curl\Curl;
+use BeSimple\SoapClient\Curl\CurlOptionsBuilder;
 
 /**
  * @author Andreas Schamberger <mail@andreass.net>
@@ -21,11 +22,12 @@ class CurlTest extends AbstractWebserverTest
 {
     public function testExec()
     {
-        $curl = new Curl(array(
-            'proxy_host' => false,
-        ));
+        $curlOptions = CurlOptionsBuilder::buildDefault();
+        $curl = new Curl(
+            $curlOptions
+        );
 
-        $this->assertTrue($curl->exec(sprintf('http://localhost:%d/curl.txt', WEBSERVER_PORT)));
+        $this->assertTrue($curl->executeCurl($curlOptions, sprintf('http://localhost:%d/curl.txt', WEBSERVER_PORT)));
         $this->assertTrue($curl->exec(sprintf('http://localhost:%d/404.txt', WEBSERVER_PORT)));
     }
 
@@ -80,44 +82,5 @@ class CurlTest extends AbstractWebserverTest
 
         $curl->exec(sprintf('http://localhost:%d/curl.txt', WEBSERVER_PORT));
         $this->assertEquals('This is a testfile for cURL.', $curl->getResponseBody());
-    }
-
-    public function testGetResponseContentType()
-    {
-        $curl = new Curl(array(
-            'proxy_host' => false,
-        ));
-
-        $curl->exec(sprintf('http://localhost:%d/curl.txt', WEBSERVER_PORT));
-        $this->assertEquals('text/plain; charset=UTF-8', $curl->getResponseContentType());
-
-        $curl->exec(sprintf('http://localhost:%d/404.txt', WEBSERVER_PORT));
-        $this->assertEquals('text/html; charset=UTF-8', $curl->getResponseContentType());
-    }
-
-    public function testGetResponseHeaders()
-    {
-        $curl = new Curl(array(
-            'proxy_host' => false,
-        ));
-
-        $curl->exec(sprintf('http://localhost:%d/curl.txt', WEBSERVER_PORT));
-        $this->assertEquals(117 + self::$websererPortLength, strlen($curl->getResponseHeaders()));
-
-        $curl->exec(sprintf('http://localhost:%d/404.txt', WEBSERVER_PORT));
-        $this->assertEquals(124 + self::$websererPortLength, strlen($curl->getResponseHeaders()));
-    }
-
-    public function testGetResponseStatusCode()
-    {
-        $curl = new Curl(array(
-            'proxy_host' => false,
-        ));
-
-        $curl->exec(sprintf('http://localhost:%d/curl.txt', WEBSERVER_PORT));
-        $this->assertEquals(200, $curl->getResponseStatusCode());
-
-        $curl->exec(sprintf('http://localhost:%d/404.txt', WEBSERVER_PORT));
-        $this->assertEquals(404, $curl->getResponseStatusCode());
     }
 }

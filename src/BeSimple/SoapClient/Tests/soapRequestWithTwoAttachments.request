@@ -1,0 +1,24 @@
+
+--Part_10_589b2dcf4f7fb.589b2dcf4f804
+Content-Type: application/soap+xml; charset=utf-8
+Content-Transfer-Encoding: 8bit
+Content-ID: <part-7e61b8e0-f84d-4cf7-8043-3c27d90767af@response.info>
+
+<?xml version="1.0" encoding="UTF-8"?>
+<env:Envelope xmlns:env="http://www.w3.org/2003/05/soap-envelope" xmlns:ns1="http://www.webserviceX.NET"><env:Body><ns1:GetUKLocationByCounty><ns1:County>London</ns1:County></ns1:GetUKLocationByCounty></env:Body></env:Envelope>
+
+--Part_10_589b2dcf4f7fb.589b2dcf4f804
+Content-Type: application/pdf; charset=utf-8
+Content-Transfer-Encoding: binary
+Content-ID: <first-file.txt>
+Content-Location: first-file.txt
+
+hello world
+--Part_10_589b2dcf4f7fb.589b2dcf4f804
+Content-Type: application/pdf; charset=utf-8
+Content-Transfer-Encoding: binary
+Content-ID: <second-file.txt>
+Content-Location: second-file.txt
+
+hello world
+--Part_10_589b2dcf4f7fb.589b2dcf4f804--

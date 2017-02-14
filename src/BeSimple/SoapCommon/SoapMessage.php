@@ -62,7 +62,7 @@ abstract class SoapMessage
     /**
      * Mime attachments.
      *
-     * @var array(\BeSimple\SoapCommon\Mime\Part)
+     * @var \BeSimple\SoapCommon\Mime\Part[]
      */
     protected $attachments;
 

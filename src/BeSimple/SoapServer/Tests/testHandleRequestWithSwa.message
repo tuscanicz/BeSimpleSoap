@@ -1,0 +1,15 @@
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:sch="http://schema.testcase">
+   <soapenv:Header>
+      <sch:SoapHeader>
+         <user>admin</user>
+      </sch:SoapHeader>
+   </soapenv:Header>
+   <soapenv:Body>
+      <sch:dummyServiceMethodWithAttachments>
+         <request>
+            <dummyAttribute>2</dummyAttribute>
+            <includeAttachments>false</includeAttachments>
+         </request>
+      </sch:dummyServiceMethodWithAttachments>
+   </soapenv:Body>
+</soapenv:Envelope>

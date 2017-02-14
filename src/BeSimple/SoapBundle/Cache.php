@@ -13,27 +13,45 @@
 namespace BeSimple\SoapBundle;
 
 use BeSimple\SoapCommon\Cache as BaseCache;
+use BeSimple\SoapCommon\SoapOptions\SoapOptions;
+use Exception;
 
 /**
  * @author Francis Besset <francis.besset@gmail.com>
  */
 class Cache
 {
-    public function __construct($cacheDisabled, $type, $directory, $lifetime = null, $limit = null)
+    public function __construct(SoapOptions $soapOptions)
     {
-        $isEnabled = (Boolean) $cacheDisabled ? BaseCache::DISABLED : BaseCache::ENABLED;
+        if ($soapOptions->isWsdlCached()) {
+            $isEnabled = (bool)$soapOptions->isWsdlCached() ? BaseCache::ENABLED : BaseCache::DISABLED;
 
-        BaseCache::setEnabled($isEnabled);
-
-        BaseCache::setType($type);
-        BaseCache::setDirectory($directory);
-
-        if (null !== $lifetime) {
-            BaseCache::setLifetime($lifetime);
+            BaseCache::setEnabled($isEnabled);
+            BaseCache::setType($soapOptions->getWsdlCacheType());
+            BaseCache::setDirectory($soapOptions->getWsdlCacheDir());
+        } else {
+            BaseCache::setEnabled(BaseCache::DISABLED);
+            BaseCache::setType(SoapOptions::SOAP_CACHE_TYPE_NONE);
+            BaseCache::setDirectory(null);
         }
+    }
 
-        if (null !== $limit) {
-            BaseCache::setLimit($limit);
+    public function validateSettings(SoapOptions $soapOptions)
+    {
+        if ($soapOptions->isWsdlCached()) {
+            if (BaseCache::isEnabled() !== true) {
+                throw new Exception('WSDL cache could not be set');
+            }
+            if ($soapOptions->getWsdlCacheType() !== (int)BaseCache::getType()) {
+                throw new Exception('WSDL cache type could not be set, ini settings is: '.BaseCache::getType());
+            }
+            if ($soapOptions->getWsdlCacheDir() !== BaseCache::getDirectory()) {
+                throw new Exception('WSDL cache dir could not be set, real dir is: '.BaseCache::getDirectory());
+            }
+        } else {
+            if (BaseCache::isEnabled() !== false) {
+                throw new Exception('WSDL cache could not be turned off');
+            }
         }
     }
 }

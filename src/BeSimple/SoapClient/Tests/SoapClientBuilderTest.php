@@ -12,113 +12,286 @@
 
 namespace BeSimple\SoapClient\Tests;
 
+use BeSimple\SoapBundle\Soap\SoapAttachment;
+use BeSimple\SoapClient\Curl\CurlOptions;
 use BeSimple\SoapClient\SoapClientBuilder;
+use BeSimple\SoapClient\SoapClientOptionsBuilder;
+use BeSimple\SoapClient\SoapFaultWithTracingData;
+use BeSimple\SoapClient\SoapOptions\SoapClientOptions;
+use BeSimple\SoapCommon\ClassMap;
+use BeSimple\SoapCommon\SoapOptions\SoapOptions;
+use BeSimple\SoapCommon\SoapOptionsBuilder;
+use Exception;
+use SoapHeader;
 
 class SoapClientBuilderTest extends \PHPUnit_Framework_TestCase
 {
-    private $defaultOptions = array(
-        'features' => 0,
-        'classmap' => array(),
-        'typemap'  => array(),
-    );
+    const CACHE_DIR = __DIR__ . '/../../../../cache';
+    const TEST_ENDPOINT_UK = 'http://www.webservicex.net/uklocation.asmx';
+    const TEST_REMOTE_WSDL_UK = 'http://www.webservicex.net/uklocation.asmx?WSDL';
+    const TEST_LOCAL_WSDL_UK = __DIR__.'/localWsdl.wsdl';
+    const TEST_REMOTE_WSDL_NOT_WORKING = 'http://www.nosuchserverexist.tld/doesnotexist.endpoint?wsdl';
+    const TEST_ENDPOINT_SWA = 'https://demo2815480.mockable.io/soap/testGenerator';
+    const TEST_REMOTE_WSDL_SWA = 'https://demo2815480.mockable.io/soap/testGenerator?WSDL';
 
-    public function testContruct()
+    public function testSoapOptionsCreateWithDefaults()
     {
-        $options = $this
-            ->getSoapBuilder()
-            ->getSoapOptions()
-        ;
+        $defaultOptions = SoapOptionsBuilder::createWithDefaults(self::TEST_LOCAL_WSDL_UK);
 
-        $this->assertEquals($this->mergeOptions(array()), $options);
+        self::assertInstanceOf(SoapOptions::class, $defaultOptions);
+        self::assertEquals(self::TEST_LOCAL_WSDL_UK, $defaultOptions->getWsdlFile());
     }
 
-    public function testWithTrace()
+    public function testSoapClientOptionsCreateWithDefaults()
     {
-        $builder = $this->getSoapBuilder();
+        $defaultOptions = SoapClientOptionsBuilder::createWithDefaults();
 
-        $builder->withTrace();
-        $this->assertEquals($this->mergeOptions(array('trace' => true)), $builder->getSoapOptions());
-
-        $builder->withTrace(false);
-        $this->assertEquals($this->mergeOptions(array('trace' => false)), $builder->getSoapOptions());
+        self::assertInstanceOf(SoapClientOptions::class, $defaultOptions);
+        self::assertEquals(CurlOptions::DEFAULT_USER_AGENT, $defaultOptions->getUserAgent());
     }
 
-    public function testWithExceptions()
+    public function testConstructSoapClientWithDefaults()
     {
-        $builder = $this->getSoapBuilder();
+        $soapClient = $this->getSoapBuilder()->build(
+            SoapClientOptionsBuilder::createWithDefaults(),
+            SoapOptionsBuilder::createWithDefaults(self::TEST_REMOTE_WSDL_UK)
+        );
 
-        $builder->withExceptions();
-        $this->assertEquals($this->mergeOptions(array('exceptions' => true)), $builder->getSoapOptions());
-
-        $builder->withExceptions(false);
-        $this->assertEquals($this->mergeOptions(array('exceptions' => false)), $builder->getSoapOptions());
+        self::assertInstanceOf(\SoapClient::class, $soapClient);
     }
 
-    public function testWithUserAgent()
+    public function testConstructSoapClientWithSwaAndClassMapAndCacheDisk()
     {
-        $builder = $this->getSoapBuilder();
+        $soapOptions = SoapOptionsBuilder::createSwaWithClassMap(
+            self::TEST_REMOTE_WSDL_UK,
+            new ClassMap(),
+            SoapOptions::SOAP_CACHE_TYPE_DISK,
+            __DIR__.'/../../../../cache'
+        );
 
-        $builder->withUserAgent('BeSimpleSoap Test');
-        $this->assertEquals($this->mergeOptions(array('user_agent' => 'BeSimpleSoap Test')), $builder->getSoapOptions());
+        $soapClient = $this->getSoapBuilder()->build(
+            SoapClientOptionsBuilder::createWithDefaults(),
+            $soapOptions
+        );
+
+        self::assertInstanceOf(\SoapClient::class, $soapClient);
     }
 
-    public function testWithCompression()
+    public function testConstructSoapClientWithDefaultsAndLocalWsdlFile()
     {
-        $builder = $this->getSoapBuilder();
+        $soapClient = $this->getSoapBuilder()->build(
+            SoapClientOptionsBuilder::createWithDefaults(),
+            SoapOptionsBuilder::createWithDefaults(self::TEST_LOCAL_WSDL_UK)
+        );
 
-        $builder->withCompressionGzip();
-        $this->assertEquals($this->mergeOptions(array('compression' => SOAP_COMPRESSION_ACCEPT | SOAP_COMPRESSION_GZIP)), $builder->getSoapOptions());
-
-        $builder->withCompressionDeflate();
-        $this->assertEquals($this->mergeOptions(array('compression' => SOAP_COMPRESSION_ACCEPT | SOAP_COMPRESSION_DEFLATE)), $builder->getSoapOptions());
+        self::assertInstanceOf(\SoapClient::class, $soapClient);
     }
 
-    public function testWithAuthentication()
+    public function testConstructSoapClientWithSwaAndClassMapAndCacheDiskAndLocalWsdlFile()
     {
-        $builder = $this->getSoapBuilder();
+        $soapOptions = SoapOptionsBuilder::createSwaWithClassMap(
+            self::TEST_LOCAL_WSDL_UK,
+            new ClassMap(),
+            SoapOptions::SOAP_CACHE_TYPE_DISK,
+            __DIR__ .'/../../../../cache'
+        );
 
-        $builder->withDigestAuthentication(__DIR__.'/Fixtures/cert.pem', 'foobar');
-        $this->assertEquals($this->mergeOptions(array('authentication' => SOAP_AUTHENTICATION_DIGEST, 'local_cert' => __DIR__.'/Fixtures/cert.pem', 'passphrase' => 'foobar')), $builder->getSoapOptions());
+        $soapClient = $this->getSoapBuilder()->build(
+            SoapClientOptionsBuilder::createWithDefaults(),
+            $soapOptions
+        );
 
-        $builder->withDigestAuthentication(__DIR__.'/Fixtures/cert.pem');
-        $this->assertEquals($this->mergeOptions(array('authentication' => SOAP_AUTHENTICATION_DIGEST, 'local_cert' => __DIR__.'/Fixtures/cert.pem')), $builder->getSoapOptions());
-
-        $builder->withBasicAuthentication('foo', 'bar');
-        $this->assertEquals($this->mergeOptions(array('authentication' => SOAP_AUTHENTICATION_BASIC, 'login' => 'foo', 'password' => 'bar')), $builder->getSoapOptions());
+        self::assertInstanceOf(\SoapClient::class, $soapClient);
     }
 
-    public function testWithProxy()
+    public function testSoapCall()
     {
-        $builder = $this->getSoapBuilder();
+        $soapClient = $this->getSoapBuilder()->build(
+            SoapClientOptionsBuilder::createWithDefaults(),
+            SoapOptionsBuilder::createWithDefaults(self::TEST_REMOTE_WSDL_UK)
+        );
+        $getUKLocationByCountyRequest = new GetUKLocationByCounty();
+        $getUKLocationByCountyRequest->County = 'London';
+        $soapResponse = $soapClient->soapCall('GetUKLocationByCounty', [$getUKLocationByCountyRequest]);
 
-        $builder->withProxy('localhost', 8080);
-        $this->assertEquals($this->mergeOptions(array('proxy_host' => 'localhost', 'proxy_port' => 8080)), $builder->getSoapOptions());
+        self::assertContains('GetUKLocationByCountyResult', $soapResponse->getContent());
+        self::assertContains('</GetUKLocationByCountyResponse>', $soapResponse->getContent());
+        self::assertEquals(self::TEST_ENDPOINT_UK, $soapResponse->getLocation());
+    }
 
-        $builder->withProxy('127.0.0.1', 8585, 'foo', 'bar');
-        $this->assertEquals($this->mergeOptions(array('proxy_host' => '127.0.0.1', 'proxy_port' => 8585, 'proxy_login' => 'foo', 'proxy_password' => 'bar')), $builder->getSoapOptions());
+    public function testSoapCallWithCacheEndpointDownShouldFail()
+    {
+        $this->setExpectedException(Exception::class, 'Could not write WSDL cache file: Download failed with message');
 
-        $builder->withProxy('127.0.0.1', 8585, 'foo', 'bar', \CURLAUTH_BASIC);
-        $this->assertEquals($this->mergeOptions(array('proxy_host' => '127.0.0.1', 'proxy_port' => 8585, 'proxy_login' => 'foo', 'proxy_password' => 'bar', 'proxy_auth' => \CURLAUTH_BASIC)), $builder->getSoapOptions());
+        $this->getSoapBuilder()->build(
+            SoapClientOptionsBuilder::createWithDefaults(),
+            SoapOptionsBuilder::createWithDefaults(
+                self::TEST_REMOTE_WSDL_NOT_WORKING,
+                SoapOptions::SOAP_CACHE_TYPE_DISK,
+                __DIR__ .'/../../../../cache'
+            )
+        );
+    }
 
-        $builder->withProxy('127.0.0.1', 8585, 'foo', 'bar', \CURLAUTH_NTLM);
-        $this->assertEquals($this->mergeOptions(array('proxy_host' => '127.0.0.1', 'proxy_port' => 8585, 'proxy_login' => 'foo', 'proxy_password' => 'bar', 'proxy_auth' => \CURLAUTH_NTLM)), $builder->getSoapOptions());
+    public function testSoapCallEndpointDownShouldFail()
+    {
+        $this->setExpectedException(Exception::class, 'Parsing WSDL: Couldn\'t load from');
+
+        $this->getSoapBuilder()->build(
+            SoapClientOptionsBuilder::createWithDefaults(),
+            SoapOptionsBuilder::createWithDefaults(self::TEST_REMOTE_WSDL_NOT_WORKING)
+        );
+    }
+
+    public function testSoapCallNoSwaWithAttachmentMustFail()
+    {
+        $this->setExpectedException(Exception::class, 'Non SWA SoapClient cannot handle SOAP action');
+
+        $soapClient = $this->getSoapBuilder()->build(
+            SoapClientOptionsBuilder::createWithDefaults(),
+            SoapOptionsBuilder::createWithDefaults(self::TEST_REMOTE_WSDL_UK)
+        );
+        $getUKLocationByCountyRequest = new GetUKLocationByCounty();
+        $getUKLocationByCountyRequest->County = 'London';
+
+        $soapClient->soapCall(
+            'GetUKLocationByCounty',
+            [$getUKLocationByCountyRequest],
+            [
+                new SoapAttachment(
+                    'first-file.txt',
+                    'text/plain',
+                    'unexpected file - no SWA - must fail'
+                ),
+            ]
+        );
+    }
+
+    public function testSoapCallSwaWithTwoAttachments()
+    {
+        $soapClient = $this->getSoapBuilder()->build(
+            SoapClientOptionsBuilder::createWithTracing(),
+            SoapOptionsBuilder::createSwaWithClassMap(
+                self::TEST_REMOTE_WSDL_UK,
+                new ClassMap(),
+                SoapOptions::SOAP_CACHE_TYPE_DISK,
+                __DIR__ .'/../../../../cache'
+            )
+        );
+        $getUKLocationByCountyRequest = new GetUKLocationByCounty();
+        $getUKLocationByCountyRequest->County = 'London';
 
         try {
-            $builder->withProxy('127.0.0.1', 8585, 'foo', 'bar', -100);
-
-            $this->fail('An expected exception has not been raised.');
-        } catch (\Exception $e) {
-            $this->assertInstanceOf('InvalidArgumentException', $e);
+            $soapResponse = $soapClient->soapCall(
+                'GetUKLocationByCounty',
+                [$getUKLocationByCountyRequest],
+                [
+                    new SoapAttachment(
+                        'first-file.txt',
+                        'text/plain',
+                        'hello world'
+                    ),
+                    new SoapAttachment(
+                        'second-file.txt',
+                        'text/plain',
+                        'hello world'
+                    )
+                ]
+            );
+            $tracingData = $soapResponse->getTracingData();
+        } catch (SoapFaultWithTracingData $e) {
+            $tracingData = $e->getSoapResponseTracingData();
         }
+
+        self::assertEquals(
+            $this->getContentId($tracingData->getLastRequestHeaders()),
+            $this->getContentId($tracingData->getLastRequest()),
+            'Content ID must match in request XML and Content-Type: ...; start header'
+        );
+        self::assertEquals(
+            $this->getMultiPartBoundary($tracingData->getLastRequestHeaders()),
+            $this->getMultiPartBoundary($tracingData->getLastRequest()),
+            'MultiPart boundary must match in request XML and Content-Type: ...; boundary header'
+        );
+        self::assertContains('boundary=Part_', $tracingData->getLastRequestHeaders(), 'Headers should link to boundary');
+        self::assertContains('start="<part-', $tracingData->getLastRequestHeaders(), 'Headers should link to first MultiPart');
+        self::assertContains('action="', $tracingData->getLastRequestHeaders(), 'Headers should contain SOAP action');
+        self::assertEquals(
+            $this->removeOneTimeData(file_get_contents(__DIR__.'/soapRequestWithTwoAttachments.request')),
+            $this->removeOneTimeData($tracingData->getLastRequest()),
+            'Requests must match after onetime data were removed'
+        );
     }
 
-    public function testCreateWithDefaults()
+    public function testSoapCallSwaWithNoAttachments()
     {
-        $builder = SoapClientBuilder::createClientWithDefaults();
+        $soapClient = $this->getSoapBuilder()->build(
+            SoapClientOptionsBuilder::createWithTracing(),
+            SoapOptionsBuilder::createSwaWithClassMap(
+                self::TEST_REMOTE_WSDL_UK,
+                new ClassMap(),
+                SoapOptions::SOAP_CACHE_TYPE_DISK,
+                __DIR__ .'/../../../../cache'
+            )
+        );
+        $getUKLocationByCountyRequest = new GetUKLocationByCounty();
+        $getUKLocationByCountyRequest->County = 'London';
 
-        $this->assertInstanceOf('BeSimple\SoapClient\SoapClientBuilder', $builder);
+        try {
+            $soapResponse = $soapClient->soapCall(
+                'GetUKLocationByCounty',
+                [$getUKLocationByCountyRequest]
+            );
+            $tracingData = $soapResponse->getTracingData();
+        } catch (SoapFaultWithTracingData $e) {
+            $tracingData = $e->getSoapResponseTracingData();
+        }
 
-        $this->assertEquals($this->mergeOptions(array('soap_version' => SOAP_1_2, 'encoding' => 'UTF-8', 'features' => SOAP_SINGLE_ELEMENT_ARRAYS, 'user_agent' => 'BeSimpleSoap')), $builder->getSoapOptions());
+        self::assertNotContains('boundary=Part_', $tracingData->getLastRequestHeaders(), 'Headers should link to boundary');
+        self::assertNotContains('start="<part-', $tracingData->getLastRequestHeaders(), 'Headers should link to first MultiPart');
+        self::assertContains('action="', $tracingData->getLastRequestHeaders(), 'Headers should contain SOAP action');
+        self::assertEquals(
+            file_get_contents(__DIR__.'/soapRequestWithNoAttachments.request'),
+            $tracingData->getLastRequest(),
+            'Requests must match'
+        );
+    }
+
+    /**
+     * @see This test needs a working SWA endpoint. Examine Tests/Mock directory for details
+     */
+    public function testSoapCallSwaWithAttachmentsOnResponse()
+    {
+        $soapClient = $this->getSoapBuilder()->buildWithSoapHeader(
+            SoapClientOptionsBuilder::createWithTracing(),
+            SoapOptionsBuilder::createSwaWithClassMapV11(
+                self::TEST_REMOTE_WSDL_SWA,
+                new ClassMap([
+                    'GenerateTestRequest' => GenerateTestRequest::class,
+                ]),
+                SoapOptions::SOAP_CACHE_TYPE_DISK,
+                __DIR__ . '/../../../../cache'
+            ),
+            new SoapHeader('http://schema.testcase', 'SoapHeader', [
+                'user' => 'admin',
+            ])
+        );
+        $generateTestRequest = new GenerateTestRequest();
+        $generateTestRequest->salutation = 'World';
+
+        $soapResponse = $soapClient->soapCall('generateTest', [$generateTestRequest]);
+        $attachments = $soapResponse->getAttachments();
+
+        self::assertContains('</generateTestReturn>', $soapResponse->getResponseContent());
+        self::assertTrue($soapResponse->hasAttachments());
+        self::assertCount(1, $attachments);
+
+        $firstAttachment = reset($attachments);
+
+        self::assertEquals('text/plain', $firstAttachment->getHeader('Content-Type'));
+
+        file_put_contents(self::CACHE_DIR . '/testSoapCallSwaWithAttachmentsOnResponse.xml', $soapResponse->getContent());
+        file_put_contents(self::CACHE_DIR . '/testSoapCallSwaWithAttachmentsOnResponse.txt', $firstAttachment->getContent());
     }
 
     private function getSoapBuilder()
@@ -126,8 +299,41 @@ class SoapClientBuilderTest extends \PHPUnit_Framework_TestCase
         return new SoapClientBuilder();
     }
 
-    private function mergeOptions(array $options)
+    public function removeOneTimeData($string)
     {
-        return array_merge($this->defaultOptions, $options);
+        $contentId = $this->getContentId($string);
+        $multiPartBoundary = $this->getMultiPartBoundary($string);
+
+        return str_replace(
+            $contentId,
+            '{content-id-placeholder}',
+            str_replace(
+                $multiPartBoundary,
+                '{multipart-boundary-placeholder}',
+                $string
+            )
+        );
+    }
+
+    private function getMultiPartBoundary($string)
+    {
+        $realMultiParts = null;
+        preg_match('/Part\_[0-9]{2}\_[a-zA-Z0-9]{13}\.[a-zA-Z0-9]{13}/', $string, $realMultiParts);
+        if (count($realMultiParts) > 0) {
+            return $realMultiParts[0];
+        }
+
+        throw new Exception('Could not find real MultiPart boundary');
+    }
+
+    private function getContentId($string)
+    {
+        $realContentIds = null;
+        preg_match('/part\-[0-9a-f]{8}\-[0-9a-f]{4}\-[0-9a-f]{4}\-[0-9a-f]{4}\-[0-9a-f]{12}\@response\.info/', $string, $realContentIds);
+        if (count($realContentIds) > 0) {
+            return $realContentIds[0];
+        }
+
+        throw new Exception('Could not find real contentId');
     }
 }

@@ -13,6 +13,8 @@ namespace BeSimple\SoapBundle;
 
 use BeSimple\SoapBundle\ServiceBinding\ServiceBinder;
 use BeSimple\SoapCommon\Converter\TypeConverterCollection;
+use BeSimple\SoapCommon\SoapOptionsBuilder;
+use BeSimple\SoapServer\SoapServerOptionsBuilder;
 use BeSimple\SoapWsdl\Dumper\Dumper;
 use BeSimple\SoapServer\SoapServerBuilder;
 use Symfony\Component\Config\ConfigCache;
@@ -102,15 +104,14 @@ class WebServiceContext
     public function getServerBuilder()
     {
         if (null === $this->serverBuilder) {
-            $this->serverBuilder = SoapServerBuilder::createWithDefaults()
-                ->withWsdl($this->getWsdlFile())
-                ->withClassmap($this->getServiceDefinition()->getTypeRepository()->getClassmap())
-                ->withTypeConverters($this->converters)
-            ;
-
-            if (null !== $this->options['cache_type']) {
-                $this->serverBuilder->withWsdlCache($this->options['cache_type']);
-            }
+            $soapServerBuilder = new SoapServerBuilder();
+            $this->serverBuilder = $soapServerBuilder->build(
+                SoapServerOptionsBuilder::createWithDefaults(),
+                SoapOptionsBuilder::createWithClassMap(
+                    $this->getWsdlFile(),
+                    $this->getServiceDefinition()->getTypeRepository()->getClassmap()
+                )
+            );
         }
 
         return $this->serverBuilder;

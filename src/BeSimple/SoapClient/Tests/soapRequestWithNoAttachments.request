@@ -1,0 +1,2 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<env:Envelope xmlns:env="http://www.w3.org/2003/05/soap-envelope" xmlns:ns1="http://www.webserviceX.NET"><env:Body><ns1:GetUKLocationByCounty><ns1:County>London</ns1:County></ns1:GetUKLocationByCounty></env:Body></env:Envelope>

@@ -1,7 +1,10 @@
 <?php
 
-namespace BeSimple\SoapClient;
+namespace BeSimple\SoapClient\SoapOptions;
 
+use BeSimple\SoapClient\Curl\CurlOptions;
+use BeSimple\SoapClient\SoapServerAuthentication\SoapServerAuthenticationBasic;
+use BeSimple\SoapClient\SoapServerAuthentication\SoapServerAuthenticationDigest;
 use BeSimple\SoapClient\SoapServerAuthentication\SoapServerAuthenticationInterface;
 use BeSimple\SoapClient\SoapServerProxy\SoapServerProxy;
 
@@ -11,9 +14,9 @@ class SoapClientOptions
     const SOAP_CLIENT_TRACE_OFF = false;
     const SOAP_CLIENT_EXCEPTIONS_ON = true;
     const SOAP_CLIENT_EXCEPTIONS_OFF = false;
-    const SOAP_CLIENT_COMPRESSION_NONE = null;
-    const SOAP_CLIENT_COMPRESSION_GZIP = SOAP_COMPRESSION_ACCEPT | SOAP_COMPRESSION_GZIP;
-    const SOAP_CLIENT_COMPRESSION_DEFLATE = SOAP_COMPRESSION_ACCEPT | SOAP_COMPRESSION_DEFLATE;
+    const SOAP_CLIENT_COMPRESSION_NONE = CurlOptions::SOAP_COMPRESSION_NONE;
+    const SOAP_CLIENT_COMPRESSION_GZIP = CurlOptions::SOAP_COMPRESSION_GZIP;
+    const SOAP_CLIENT_COMPRESSION_DEFLATE = CurlOptions::SOAP_COMPRESSION_DEFLATE;
 
     private $trace;
     private $exceptions;
@@ -68,6 +71,16 @@ class SoapClientOptions
     public function hasAuthentication()
     {
         return $this->authentication !== null;
+    }
+
+    public function hasAuthenticationBasic()
+    {
+        return $this->hasAuthentication() && $this->getAuthentication() instanceof SoapServerAuthenticationBasic;
+    }
+
+    public function hasAuthenticationDigest()
+    {
+        return $this->hasAuthentication() && $this->getAuthentication() instanceof SoapServerAuthenticationDigest;
     }
 
     public function hasProxy()

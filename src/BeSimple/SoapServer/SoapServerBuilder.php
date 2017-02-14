@@ -18,7 +18,7 @@ use BeSimple\SoapServer\SoapOptions\SoapServerOptions;
 /**
  * SoapServerBuilder provides a SoapServer instance from SoapServerOptions and SoapOptions.
  *
- * @author Petr Bechyně <petr.bechyne@vodafone.com>
+ * @author Petr Bechyně <mail@petrbechyne.com>
  */
 class SoapServerBuilder
 {
