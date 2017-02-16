@@ -88,13 +88,13 @@ class SoapClient extends \SoapClient
      * @param array|null $output_headers
      * @return string
      */
-    public function __soapCall($function_name, $arguments, $options = null, $input_headers = null, &$output_headers = null)
+    public function __soapCall($function_name, array $arguments, array $options = null, $input_headers = null, array &$output_headers = null)
     {
         return $this->soapCall($function_name, $arguments, $options, $input_headers, $output_headers)->getContent();
     }
 
     /**
-    * @param string $functionName
+     * @param string $functionName
      * @param array $arguments
      * @param array|null $options
      * @param SoapAttachment[] $soapAttachments
@@ -247,7 +247,7 @@ class SoapClient extends \SoapClient
             ];
         } else {
             $headers = [
-               'Content-Type:' . $soapRequest->getContentType() . '; action="' . $soapRequest->getAction() . '"',
+                'Content-Type:' . $soapRequest->getContentType() . '; action="' . $soapRequest->getAction() . '"',
             ];
         }
         $curlResponse = $this->curl->executeCurlWithCachedSession(
