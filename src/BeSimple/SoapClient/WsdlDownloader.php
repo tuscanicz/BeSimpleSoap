@@ -180,26 +180,28 @@ class WsdlDownloader
             foreach ($nodes as $node) {
                 /** @var DOMElement $node */
                 $locationPath = $node->getAttribute($locationAttributeName);
-                if ($this->isRemoteFile($locationPath)) {
-                    $node->setAttribute(
-                        $locationAttributeName,
-                        $this->getWsdlPath(
-                            $curl,
-                            $locationPath,
-                            $cacheType,
-                            true
-                        )
-                    );
-                } else if ($parentFilePath !== null) {
-                    $node->setAttribute(
-                        $locationAttributeName,
-                        $this->getWsdlPath(
-                            $curl,
-                            $this->resolveRelativePathInUrl($parentFilePath, $locationPath),
-                            $cacheType,
-                            true
-                        )
-                    );
+                if ($locationPath !== '') {
+                    if ($this->isRemoteFile($locationPath)) {
+                        $node->setAttribute(
+                            $locationAttributeName,
+                            $this->getWsdlPath(
+                                $curl,
+                                $locationPath,
+                                $cacheType,
+                                true
+                            )
+                        );
+                    } else if ($parentFilePath !== null) {
+                        $node->setAttribute(
+                            $locationAttributeName,
+                            $this->getWsdlPath(
+                                $curl,
+                                $this->resolveRelativePathInUrl($parentFilePath, $locationPath),
+                                $cacheType,
+                                true
+                            )
+                        );
+                    }
                 }
             }
         }
@@ -218,7 +220,7 @@ class WsdlDownloader
         $urlParts = parse_url($base);
 
         // combine base path with relative path
-        if (isset($urlParts['path']) && '/' === $relative{0}) {
+        if (isset($urlParts['path']) && mb_strlen($relative) > 0 && '/' === $relative{0}) {
             // $relative is absolute path from domain (starts with /)
             $path = $relative;
         } elseif (isset($urlParts['path']) && strrpos($urlParts['path'], '/') === (strlen($urlParts['path']) )) {

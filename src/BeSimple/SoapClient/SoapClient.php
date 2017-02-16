@@ -51,20 +51,19 @@ class SoapClient extends \SoapClient
         );
 
         try {
-            @parent::__construct(
-                $this->loadWsdl(
-                    $this->curl,
-                    $soapOptions->getWsdlFile(),
-                    $soapOptions->getWsdlCacheType()
-                ),
-                $soapClientOptions->toArray() + $soapOptions->toArray()
+            $wsdlPath = $this->loadWsdl(
+                $this->curl,
+                $soapOptions->getWsdlFile(),
+                $soapOptions->getWsdlCacheType()
             );
         } catch (Exception $e) {
             throw new SoapFault(
                 SoapFaultEnum::SOAP_FAULT_SOAP_CLIENT_ERROR,
-                'Could not create SoapClient instance with message: '.$e->getMessage()
+                'Unable to load WsdlPath ('.$soapOptions->getWsdlFile().') with message: '.$e->getMessage().' in file: '.$e->getFile().' (line: '.$e->getLine().')'
             );
         }
+
+        @parent::__construct($wsdlPath, $soapClientOptions->toArray() + $soapOptions->toArray());
     }
 
     /**
@@ -82,16 +81,16 @@ class SoapClient extends \SoapClient
     /**
      * Using __soapCall returns only response string, use soapCall instead.
      *
-     * @param string $functionName
+     * @param string $function_name
      * @param array $arguments
      * @param array|null $options
-     * @param null $inputHeaders
-     * @param array|null $outputHeaders
+     * @param null $input_headers
+     * @param array|null $output_headers
      * @return string
      */
-    public function __soapCall($functionName, $arguments, $options = null, $inputHeaders = null, &$outputHeaders = null)
+    public function __soapCall($function_name, $arguments, $options = null, $input_headers = null, &$output_headers = null)
     {
-        return $this->soapCall($functionName, $arguments, $options, $inputHeaders, $outputHeaders)->getContent();
+        return $this->soapCall($function_name, $arguments, $options, $input_headers, $output_headers)->getContent();
     }
 
     /**
@@ -311,14 +310,13 @@ class SoapClient extends \SoapClient
      */
     private function loadWsdl(Curl $curl, $wsdlPath, $wsdlCacheType, $resolveRemoteIncludes = true)
     {
-
-        $wsdlDownloader = new WsdlDownloader($curl);
+        $wsdlDownloader = new WsdlDownloader();
         try {
             $loadedWsdlFilePath = $wsdlDownloader->getWsdlPath($curl, $wsdlPath, $wsdlCacheType, $resolveRemoteIncludes);
         } catch (Exception $e) {
             throw new SoapFault(
                 SoapFaultEnum::SOAP_FAULT_WSDL,
-                'Unable to load WsdlPath: ' . $e->getMessage()
+                'Unable to load WsdlPath ('.$wsdlPath.') with message: '.$e->getMessage().' in file: '.$e->getFile().' (line: '.$e->getLine().')'
             );
         }
 
