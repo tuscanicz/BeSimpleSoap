@@ -13,7 +13,7 @@ use Exception;
 class CurlOptionsBuilder
 {
     const DEFAULT_MAX_REDIRECTS = 10;
-    const DEFAULT_CONNECTION_TIMEOUT = 10;
+    const DEFAULT_CONNECTION_TIMEOUT = 120;
 
     public static function buildDefault()
     {
