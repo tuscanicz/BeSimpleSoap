@@ -41,6 +41,10 @@ class SoapClient extends \SoapClient
     protected $soapClientOptions;
     protected $soapOptions;
     private $curl;
+    /** @var SoapAttachment[] */
+    private $soapAttachmentsOnRequestStorage;
+    /** @var SoapResponse */
+    private $soapResponseStorage;
 
     public function __construct(SoapClientOptions $soapClientOptions, SoapOptions $soapOptions)
     {
@@ -54,7 +58,8 @@ class SoapClient extends \SoapClient
             $wsdlPath = $this->loadWsdl(
                 $this->curl,
                 $soapOptions->getWsdlFile(),
-                $soapOptions->getWsdlCacheType()
+                $soapOptions->getWsdlCacheType(),
+                false
             );
         } catch (Exception $e) {
             throw new SoapFault(
@@ -88,9 +93,9 @@ class SoapClient extends \SoapClient
      * @param array|null $output_headers
      * @return string
      */
-    public function __soapCall($function_name, array $arguments, array $options = null, $input_headers = null, array &$output_headers = null)
+    public function __soapCall($function_name, $arguments, $options = null, $input_headers = null, &$output_headers = null)
     {
-        return $this->soapCall($function_name, $arguments, $options, $input_headers, $output_headers)->getContent();
+        return $this->soapCall($function_name, $arguments, $options, $input_headers, $output_headers)->getResponseContent();
     }
 
     /**
@@ -104,17 +109,13 @@ class SoapClient extends \SoapClient
      */
     public function soapCall($functionName, array $arguments, array $soapAttachments = [], array $options = null, $inputHeaders = null, array &$outputHeaders = null)
     {
-        ob_start();
-        parent::__soapCall($functionName, $arguments, $options, $inputHeaders, $outputHeaders);
-        $nativeSoapClientRequest = $this->mapNativeDataJsonToDto(ob_get_clean());
+        $this->setSoapAttachmentsOnRequestToStorage($soapAttachments);
+        $soapResponseAsObject = parent::__soapCall($functionName, $arguments, $options, $inputHeaders, $outputHeaders);
 
-        return $this->performSoapRequest(
-            $nativeSoapClientRequest->request,
-            $nativeSoapClientRequest->location,
-            $nativeSoapClientRequest->action,
-            $nativeSoapClientRequest->version,
-            $soapAttachments
-        );
+        $soapResponse = $this->getSoapResponseFromStorage();
+        $soapResponse->setResponseObject($soapResponseAsObject);
+
+        return $soapResponse;
     }
 
     /**
@@ -130,34 +131,16 @@ class SoapClient extends \SoapClient
      */
     public function __doRequest($request, $location, $action, $version, $oneWay = 0)
     {
-        $soapClientNativeDataTransferObject = new SoapClientNativeDataTransferObject(
+        $soapResponse = $this->performSoapRequest(
             $request,
             $location,
             $action,
-            $version
+            $version,
+            $this->getSoapAttachmentsOnRequestFromStorage()
         );
-        echo json_encode($soapClientNativeDataTransferObject);
+        $this->setSoapResponseToStorage($soapResponse);
 
-        return $request;
-    }
-
-    /**
-     * Custom request method to be able to modify the SOAP messages.
-     * $oneWay parameter is not used at the moment.
-     *
-     * @param mixed             $request            Request object
-     * @param string            $location           Location
-     * @param string            $action             SOAP action
-     * @param int               $version            SOAP version
-     * @param SoapAttachment[]  $soapAttachments    SOAP attachments array
-     *
-     * @return SoapResponse
-     */
-    public function performSoapRequest($request, $location, $action, $version, array $soapAttachments = [])
-    {
-        $soapRequest = $this->createSoapRequest($location, $action, $version, $request, $soapAttachments);
-
-        return $this->performHttpSoapRequest($soapRequest);
+        return $soapResponse->getResponseContent();
     }
 
     /** @deprecated */
@@ -198,6 +181,25 @@ class SoapClient extends \SoapClient
         throw new Exception(
             'The __getLastResponse method is now deprecated. Use callSoapRequest instead and get the tracing information from SoapResponseTracingData.'
         );
+    }
+
+    /**
+     * Custom request method to be able to modify the SOAP messages.
+     * $oneWay parameter is not used at the moment.
+     *
+     * @param mixed             $request            Request object
+     * @param string            $location           Location
+     * @param string            $action             SOAP action
+     * @param int               $version            SOAP version
+     * @param SoapAttachment[]  $soapAttachments    SOAP attachments array
+     *
+     * @return SoapResponse
+     */
+    private function performSoapRequest($request, $location, $action, $version, array $soapAttachments = [])
+    {
+        $soapRequest = $this->createSoapRequest($location, $action, $version, $request, $soapAttachments);
+
+        return $this->performHttpSoapRequest($soapRequest);
     }
 
     /**
@@ -336,18 +338,6 @@ class SoapClient extends \SoapClient
         return $filters;
     }
 
-    private function mapNativeDataJsonToDto($nativeDataJson)
-    {
-        $nativeData = json_decode($nativeDataJson);
-
-        return new SoapClientNativeDataTransferObject(
-            $nativeData->request,
-            $nativeData->location,
-            $nativeData->action,
-            $nativeData->version
-        );
-    }
-
     private function returnSoapResponseByTracing(
         $isTracingEnabled,
         SoapRequest $soapRequest,
@@ -404,5 +394,34 @@ class SoapClient extends \SoapClient
         if ($this->soapClientOptions->getTrace() === false) {
             throw new Exception('SoapClientOptions tracing disabled, turn on trace attribute');
         }
+    }
+
+    private function setSoapResponseToStorage(SoapResponse $soapResponseStorage)
+    {
+        $this->soapResponseStorage = $soapResponseStorage;
+    }
+
+    /**
+     * @param SoapAttachment[] $soapAttachments
+     */
+    private function setSoapAttachmentsOnRequestToStorage(array $soapAttachments)
+    {
+        $this->soapAttachmentsOnRequestStorage = $soapAttachments;
+    }
+
+    private function getSoapAttachmentsOnRequestFromStorage()
+    {
+        $soapAttachmentsOnRequest = $this->soapAttachmentsOnRequestStorage;
+        $this->soapAttachmentsOnRequestStorage = null;
+
+        return $soapAttachmentsOnRequest;
+    }
+
+    private function getSoapResponseFromStorage()
+    {
+        $soapResponse = $this->soapResponseStorage;
+        $this->soapResponseStorage = null;
+
+        return $soapResponse;
     }
 }
