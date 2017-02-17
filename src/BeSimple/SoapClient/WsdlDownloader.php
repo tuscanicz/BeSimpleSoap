@@ -75,7 +75,7 @@ class WsdlDownloader
             $curlResponse = $curl->executeCurlWithCachedSession($wsdlPath);
             if ($curlResponse->curlStatusSuccess()) {
                 if (mb_strlen($curlResponse->getResponseBody()) === 0) {
-                    throw new Exception('Could not write WSDL cache file: curl response empty');
+                    throw new Exception('Could not write WSDL cache file: empty curl response from: '.$wsdlPath);
                 }
                 if ($resolveRemoteIncludes === true) {
                     $document = $this->getXmlFileDOMDocument($curl, $cacheType, $curlResponse->getResponseBody(), $wsdlPath);

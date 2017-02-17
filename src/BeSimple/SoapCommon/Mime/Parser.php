@@ -110,7 +110,8 @@ class Parser
                 }
                 if (strpos($currentHeader, ':') !== false) {
                     list($headerName, $headerValue) = explode(':', $currentHeader, 2);
-                    $headerValue = iconv_mime_decode($headerValue, 0, Part::CHARSET_UTF8);
+                    $headerValueWithNoCrAtTheEnd = trim($headerValue);
+                    $headerValue = iconv_mime_decode($headerValueWithNoCrAtTheEnd, 0, Part::CHARSET_UTF8);
                     $parsedMimeHeaders = ContentTypeParser::parseContentTypeHeader($headerName, $headerValue);
                     foreach ($parsedMimeHeaders as $parsedMimeHeader) {
                         $currentPart->setHeader(
