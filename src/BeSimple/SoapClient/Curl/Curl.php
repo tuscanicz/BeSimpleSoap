@@ -158,7 +158,7 @@ class Curl
             $location
         );
 
-        if (!is_integer($httpResponseCode) || $httpResponseCode >= 400) {
+        if (!is_integer($httpResponseCode) || $httpResponseCode >= 400 || $httpResponseCode === 0) {
 
             return new CurlResponse(
                 $httpRequestHeadersAsString,
