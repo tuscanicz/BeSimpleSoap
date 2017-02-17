@@ -62,7 +62,7 @@ class Curl
         curl_setopt_array($curlSession, [
             CURLOPT_ENCODING => '',
             CURLOPT_SSL_VERIFYPEER => false,
-            CURLOPT_FAILONERROR => true,
+            CURLOPT_FAILONERROR => false,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
             CURLOPT_HEADER => true,
@@ -147,6 +147,8 @@ class Curl
         $headerSize = curl_getinfo($curlSession, CURLINFO_HEADER_SIZE);
         $httpResponseCode = curl_getinfo($curlSession, CURLINFO_HTTP_CODE);
         $httpResponseContentType = curl_getinfo($curlSession, CURLINFO_CONTENT_TYPE);;
+        $responseBody = substr($executeSoapCallResponse, $headerSize);
+        $responseHeaders = substr($executeSoapCallResponse, 0, $headerSize);
         preg_match('/HTTP\/(1\.[0-1]+) ([0-9]{3}) (.*)/', $executeSoapCallResponse, $httpResponseMessages);
         $httpResponseMessage = trim(array_pop($httpResponseMessages));
         $curlErrorMessage = sprintf(
@@ -156,7 +158,7 @@ class Curl
             $location
         );
 
-        if ($executeSoapCallResponse === false) {
+        if (!is_integer($httpResponseCode) || $httpResponseCode >= 400) {
 
             return new CurlResponse(
                 $httpRequestHeadersAsString,
@@ -164,6 +166,8 @@ class Curl
                 $httpResponseMessage,
                 $httpResponseContentType,
                 self::CURL_FAILED,
+                $responseHeaders,
+                $responseBody,
                 $curlErrorMessage
             );
         }
@@ -174,9 +178,8 @@ class Curl
             $httpResponseMessage,
             $httpResponseContentType,
             self::CURL_SUCCESS,
-            null,
-            substr($executeSoapCallResponse, 0, $headerSize),
-            substr($executeSoapCallResponse, $headerSize)
+            $responseHeaders,
+            $responseBody
         );
     }
 

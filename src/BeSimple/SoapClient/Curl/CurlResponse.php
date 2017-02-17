@@ -19,9 +19,9 @@ class CurlResponse
         $httpResponseStatusMessage,
         $httpResponseContentType,
         $curlStatus,
-        $curlErrorMessage = null,
-        $responseHeader = null,
-        $responseBody = null
+        $responseHeader,
+        $responseBody,
+        $curlErrorMessage = null
     ) {
         $this->httpRequestHeaders = $httpRequestHeaders;
         $this->httpResponseStatusCode = $httpResponseStatusCode;
@@ -78,19 +78,9 @@ class CurlResponse
         return $this->curlErrorMessage;
     }
 
-    public function hasResponseHeader()
-    {
-        return $this->responseHeader !== null;
-    }
-
     public function getResponseHeader()
     {
         return $this->responseHeader;
-    }
-
-    public function hasResponseBody()
-    {
-        return $this->responseBody !== null;
     }
 
     public function getResponseBody()
