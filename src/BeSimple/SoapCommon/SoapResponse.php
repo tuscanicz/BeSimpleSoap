@@ -13,8 +13,6 @@
 
 namespace BeSimple\SoapCommon;
 
-use BeSimple\SoapClient\SoapResponseTracingData;
-
 /**
  * SOAP response message.
  *
@@ -23,21 +21,4 @@ use BeSimple\SoapClient\SoapResponseTracingData;
  */
 class SoapResponse extends SoapMessage
 {
-    /** @var SoapResponseTracingData */
-    protected $tracingData;
-
-    public function hasTracingData()
-    {
-        return $this->tracingData !== null;
-    }
-
-    public function getTracingData()
-    {
-        return $this->tracingData;
-    }
-
-    public function setTracingData(SoapResponseTracingData $tracingData)
-    {
-        $this->tracingData = $tracingData;
-    }
 }

@@ -38,7 +38,7 @@ class MimeFilter implements SoapRequestFilter, SoapResponseFilter
         $soapPart = $multiPartMessage->getMainPart();
         $attachments = $multiPartMessage->getAttachments();
 
-        $request->setContent($this->sanitizePhpExceptionOnHrefs($soapPart));
+        $request->setContent($soapPart->getContent());
         $request->setContentType($soapPart->getHeader('Content-Type'));
         if (count($attachments) > 0) {
             $request->setAttachments($attachments);
