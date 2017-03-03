@@ -10,7 +10,7 @@ use BeSimple\SoapClient\SoapServerProxy\SoapServerProxy;
 
 class CurlOptions
 {
-    const DEFAULT_USER_AGENT = 'BeSimpleSoap';
+    const DEFAULT_USER_AGENT = 'PhpBeSimpleSoap';
     const SOAP_COMPRESSION_NONE = null;
     const SOAP_COMPRESSION_GZIP = SOAP_COMPRESSION_ACCEPT | SOAP_COMPRESSION_GZIP;
     const SOAP_COMPRESSION_DEFLATE = SOAP_COMPRESSION_ACCEPT | SOAP_COMPRESSION_DEFLATE;

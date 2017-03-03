@@ -244,12 +244,14 @@ class SoapClient extends \SoapClient
     {
         if ($soapRequest->getVersion() === SOAP_1_1) {
             $headers = [
-                'Content-Type:' . $soapRequest->getContentType(),
+                'Content-Type: ' . $soapRequest->getContentType(),
                 'SOAPAction: "' . $soapRequest->getAction() . '"',
+                'Connection: ' . ($this->soapOptions->isConnectionKeepAlive() ? 'Keep-Alive' : 'close'),
             ];
         } else {
             $headers = [
-                'Content-Type:' . $soapRequest->getContentType() . '; action="' . $soapRequest->getAction() . '"',
+                'Content-Type: ' . $soapRequest->getContentType() . '; action="' . $soapRequest->getAction() . '"',
+                'Connection: ' . ($this->soapOptions->isConnectionKeepAlive() ? 'Keep-Alive' : 'close'),
             ];
         }
         $curlResponse = $this->curl->executeCurlWithCachedSession(

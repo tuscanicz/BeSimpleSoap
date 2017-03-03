@@ -17,6 +17,8 @@ class SoapClientOptions
     const SOAP_CLIENT_COMPRESSION_NONE = CurlOptions::SOAP_COMPRESSION_NONE;
     const SOAP_CLIENT_COMPRESSION_GZIP = CurlOptions::SOAP_COMPRESSION_GZIP;
     const SOAP_CLIENT_COMPRESSION_DEFLATE = CurlOptions::SOAP_COMPRESSION_DEFLATE;
+    const SOAP_CLIENT_AUTHENTICATION_NONE = null;
+    const SOAP_CLIENT_PROXY_NONE = null;
 
     private $trace;
     private $exceptions;
@@ -24,23 +26,33 @@ class SoapClientOptions
     private $compression;
     private $authentication;
     private $proxy;
+    private $location;
 
     /**
      * @param bool $trace = SoapClientOptions::SOAP_CLIENT_TRACE_ON|SoapClientOptions::SOAP_CLIENT_TRACE_OFF
      * @param bool $exceptions = SoapClientOptions::SOAP_CLIENT_EXCEPTIONS_ON|SoapClientOptions::SOAP_CLIENT_EXCEPTIONS_OFF
      * @param string $userAgent
-     * @param int $compression = SoapClientOptions::SOAP_CLIENT_COMPRESSION_NONE|SoapClientOptions::SOAP_CLIENT_COMPRESSION_GZIP|SoapClientOptions::SOAP_CLIENT_COMPRESSION_DEFLATE
-     * @param SoapServerAuthenticationInterface $authentication = null
-     * @param SoapServerProxy $proxy = null
+     * @param int|null $compression = SoapClientOptions::SOAP_CLIENT_COMPRESSION_NONE|SoapClientOptions::SOAP_CLIENT_COMPRESSION_GZIP|SoapClientOptions::SOAP_CLIENT_COMPRESSION_DEFLATE
+     * @param SoapServerAuthenticationInterface|null $authentication
+     * @param SoapServerProxy|null $proxy
+     * @param string|null $location
      */
-    public function __construct($trace, $exceptions, $userAgent, $compression = null, SoapServerAuthenticationInterface $authentication = null, SoapServerProxy $proxy = null)
-    {
+    public function __construct(
+        $trace,
+        $exceptions,
+        $userAgent,
+        $compression = null,
+        SoapServerAuthenticationInterface $authentication = null,
+        SoapServerProxy $proxy = null,
+        $location = null
+    ) {
         $this->trace = $trace;
         $this->exceptions = $exceptions;
         $this->userAgent = $userAgent;
         $this->compression = $compression;
         $this->authentication = $authentication;
         $this->proxy = $proxy;
+        $this->location = $location;
     }
 
     public function getTrace()
@@ -88,6 +100,11 @@ class SoapClientOptions
         return $this->proxy !== null;
     }
 
+    public function hasLocation()
+    {
+        return $this->location !== null;
+    }
+
     public function getAuthentication()
     {
         return $this->authentication;
@@ -96,6 +113,11 @@ class SoapClientOptions
     public function getProxy()
     {
         return $this->proxy;
+    }
+
+    public function getLocation()
+    {
+        return $this->location;
     }
 
     public function toArray()
@@ -113,6 +135,9 @@ class SoapClientOptions
         }
         if ($this->hasProxy()) {
             $optionsAsArray += $this->getProxy()->toArray();
+        }
+        if ($this->hasLocation()) {
+            $optionsAsArray['location'] = $this->getLocation();
         }
 
         return $optionsAsArray;

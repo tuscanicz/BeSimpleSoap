@@ -45,6 +45,19 @@ class SoapClientOptionsBuilder
         );
     }
 
+    public static function createWithEndpointLocation($endpointLocation)
+    {
+        return new SoapClientOptions(
+            SoapClientOptions::SOAP_CLIENT_TRACE_ON,
+            SoapClientOptions::SOAP_CLIENT_EXCEPTIONS_ON,
+            CurlOptions::DEFAULT_USER_AGENT,
+            SoapClientOptions::SOAP_CLIENT_COMPRESSION_NONE,
+            SoapClientOptions::SOAP_CLIENT_AUTHENTICATION_NONE,
+            SoapClientOptions::SOAP_CLIENT_PROXY_NONE,
+            $endpointLocation
+        );
+    }
+
     public static function createWithAuthentication(SoapServerAuthenticationInterface $authentication)
     {
         return new SoapClientOptions(
@@ -53,6 +66,19 @@ class SoapClientOptionsBuilder
             CurlOptions::DEFAULT_USER_AGENT,
             SoapClientOptions::SOAP_CLIENT_COMPRESSION_NONE,
             $authentication
+        );
+    }
+
+    public static function createWithAuthenticationAndEndpointLocation($endpointLocation, SoapServerAuthenticationInterface $authentication)
+    {
+        return new SoapClientOptions(
+            SoapClientOptions::SOAP_CLIENT_TRACE_ON,
+            SoapClientOptions::SOAP_CLIENT_EXCEPTIONS_ON,
+            CurlOptions::DEFAULT_USER_AGENT,
+            SoapClientOptions::SOAP_CLIENT_COMPRESSION_NONE,
+            $authentication,
+            SoapClientOptions::SOAP_CLIENT_PROXY_NONE,
+            $endpointLocation
         );
     }
 }

@@ -22,6 +22,7 @@ use BeSimple\SoapCommon\ClassMap;
 use BeSimple\SoapCommon\SoapOptions\SoapOptions;
 use BeSimple\SoapCommon\SoapOptionsBuilder;
 use Exception;
+use SoapClient;
 use SoapHeader;
 
 class SoapClientBuilderTest extends \PHPUnit_Framework_TestCase
@@ -30,6 +31,7 @@ class SoapClientBuilderTest extends \PHPUnit_Framework_TestCase
     const TEST_ENDPOINT_UK = 'http://www.webservicex.net/uklocation.asmx';
     const TEST_REMOTE_WSDL_UK = 'http://www.webservicex.net/uklocation.asmx?WSDL';
     const TEST_LOCAL_WSDL_UK = __DIR__.'/localWsdl.wsdl';
+    const TEST_REMOTE_ENDPOINT_NOT_WORKING = 'http://www.nosuchserverexist.tld/doesnotexist.endpoint';
     const TEST_REMOTE_WSDL_NOT_WORKING = 'http://www.nosuchserverexist.tld/doesnotexist.endpoint?wsdl';
     const TEST_ENDPOINT_SWA = 'https://demo2815480.mockable.io/soap/testGenerator';
     const TEST_REMOTE_WSDL_SWA = 'https://demo2815480.mockable.io/soap/testGenerator?WSDL';
@@ -101,7 +103,7 @@ class SoapClientBuilderTest extends \PHPUnit_Framework_TestCase
             $soapOptions
         );
 
-        self::assertInstanceOf(\SoapClient::class, $soapClient);
+        self::assertInstanceOf(SoapClient::class, $soapClient);
     }
 
     public function testSoapCall()
@@ -117,6 +119,53 @@ class SoapClientBuilderTest extends \PHPUnit_Framework_TestCase
         self::assertContains('GetUKLocationByCountyResult', $soapResponse->getContent());
         self::assertContains('</GetUKLocationByCountyResponse>', $soapResponse->getContent());
         self::assertEquals(self::TEST_ENDPOINT_UK, $soapResponse->getLocation());
+    }
+
+    public function testSoapCallWithCustomEndpointValid()
+    {
+        $soapClient = $this->getSoapBuilder()->build(
+            SoapClientOptionsBuilder::createWithEndpointLocation(self::TEST_ENDPOINT_UK),
+            SoapOptionsBuilder::createWithDefaults(self::TEST_REMOTE_WSDL_UK)
+        );
+        $getUKLocationByCountyRequest = new GetUKLocationByCounty();
+        $getUKLocationByCountyRequest->County = 'London';
+        $soapResponse = $soapClient->soapCall('GetUKLocationByCounty', [$getUKLocationByCountyRequest]);
+
+        self::assertContains('Connection: close', $soapResponse->getTracingData()->getLastRequestHeaders());
+        self::assertContains('County>London</', $soapResponse->getTracingData()->getLastRequest());
+        self::assertContains('GetUKLocationByCountyResult', $soapResponse->getContent());
+        self::assertContains('</GetUKLocationByCountyResponse>', $soapResponse->getContent());
+        self::assertEquals(self::TEST_ENDPOINT_UK, $soapResponse->getLocation());
+    }
+
+    public function testSoapCallWithKeepAliveTrue()
+    {
+        $soapClient = $this->getSoapBuilder()->build(
+            SoapClientOptionsBuilder::createWithEndpointLocation(self::TEST_ENDPOINT_UK),
+            SoapOptionsBuilder::createWithDefaultsKeepAlive(self::TEST_REMOTE_WSDL_UK)
+        );
+        $getUKLocationByCountyRequest = new GetUKLocationByCounty();
+        $getUKLocationByCountyRequest->County = 'London';
+        $soapResponse = $soapClient->soapCall('GetUKLocationByCounty', [$getUKLocationByCountyRequest]);
+
+        self::assertContains('Connection: Keep-Alive', $soapResponse->getTracingData()->getLastRequestHeaders());
+        self::assertContains('County>London</', $soapResponse->getTracingData()->getLastRequest());
+        self::assertContains('GetUKLocationByCountyResult', $soapResponse->getContent());
+        self::assertContains('</GetUKLocationByCountyResponse>', $soapResponse->getContent());
+        self::assertEquals(self::TEST_ENDPOINT_UK, $soapResponse->getLocation());
+    }
+
+    public function testSoapCallWithCustomEndpointInvalidShouldFail()
+    {
+        $this->setExpectedException(Exception::class, 'Could not resolve host');
+
+        $soapClient = $this->getSoapBuilder()->build(
+            SoapClientOptionsBuilder::createWithEndpointLocation(self::TEST_REMOTE_ENDPOINT_NOT_WORKING),
+            SoapOptionsBuilder::createWithDefaults(self::TEST_REMOTE_WSDL_UK)
+        );
+        $getUKLocationByCountyRequest = new GetUKLocationByCounty();
+        $getUKLocationByCountyRequest->County = 'London';
+        $soapClient->soapCall('GetUKLocationByCounty', [$getUKLocationByCountyRequest]);
     }
 
     public function testSoapCallWithCacheEndpointDownShouldFail()
