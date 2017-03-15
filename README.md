@@ -1,8 +1,8 @@
 # BeSimpleSoap
 
 Build SOAP and WSDL based web services.
-This fork from 2017 is a refactored version that fixes a lot of errors and provides
-better APi, more robust, stable and modern codebase.
+This fork is a refactored version that fixes a lot of errors and provides
+better API, robust, stable and modern codebase.
 See [How to use](#how-to-use) that will help you to understand the magic.
 
 # Components
@@ -23,14 +23,16 @@ BeSimpleSoap consists of five components ...
 
 ## BeSimpleSoapWsdl
 
-Currently **unsupported!** For further information see the [README](https://github.com/BeSimple/BeSimpleSoap/blob/master/src/BeSimple/SoapWsdl/README.md).
+**Untouched!**
+The component is not affected by refactoring so it should work properly. 
+For further information see the original [README](https://github.com/BeSimple/BeSimpleSoap/blob/master/src/BeSimple/SoapWsdl/README.md).
 
 ## BeSimpleSoapBundle
 
-Currently **unsupported!**
+**Unsupported!**
 The BeSimpleSoapBundle is a Symfony2 bundle to build WSDL and SOAP based web services.
 For further information see the the original [README](https://github.com/BeSimple/BeSimpleSoap/blob/master/src/BeSimple/SoapBundle/README.md).
-*May not work properly since the Symfony libraries were removed.* 
+*Will not work since the Symfony libraries were removed and usages of other components were not refactored. Feel free to fork this repository and fix it!* 
 
 # Installation
 
@@ -59,9 +61,11 @@ php /usr/local/bin/composer.phar install
 # How to use
 
 You can investigate the unit tests dir ``tests`` in order to get a clue.
-Forget about associative arrays, multiple extension and silent errors! 
+Forget about associative arrays, vague configurations, multiple extension and silent errors! 
+This may look a bit more complex at the first sight, 
+but it will guide you to configure and set up your client or server properly.
 
-## Small example of soap client call
+## Example of soap client call
 
 ```php
 $soapClientBuilder = new SoapClientBuilder();
@@ -80,11 +84,8 @@ var_dump($soapResponse); // Contains Response, Attachments
 Turn on the tracking and catch `SoapFaultWithTracingData` exception to get some sweets :) 
 
 ```php
-$myRequest = new MyRequest();
-$myRequest->attribute = 'string value';
-
 try {
-    $soapResponse = $soapClient->soapCall('MyMethod', [$myRequest]);
+    $soapResponse = $soapClient->soapCall('myMethod', [$myRequest]);
 } catch (SoapFaultWithTracingData $fault) {
     var_dump($fault->getSoapResponseTracingData()->getLastRequest());
 }
@@ -92,12 +93,10 @@ try {
 In this example, a ``MyRequest`` object has been used to describe request.
 Using a ClassMap, you help SoapClient to turn it into XML request.
 
-## Small example of soap server handling
+## Example of soap server handling
 
 Starting a SOAP server is a bit more complex.
-I would suggest you to inspect SoapServer unit tests to get complete image. 
-But don't be scared too much, you just need to create a DummyService that will
-handle your client SOAP calls.
+I recommend you to inspect SoapServer unit tests for inspiration. 
 
 ```php
 $dummyService = new DummyService();
@@ -124,3 +123,25 @@ In this example, a ``DummyService`` service has been used to handle request.
 Using a service can help you create coherent SoapServer endpoints.
 Service can hold an endpoint URL, WSDL path and a class map as associative array.
 You can hold a class map as ``ClassMap`` object directly in the ``DummyService`` instead of array.
+
+In the service you should describe SOAP methods from given WSDL.
+In the example, the dummyServiceMethod is called.
+The method will receive request object and return response object that are matched according to the class map.
+
+See a simplified implementation of ``dummyServiceMethod`` to get a clue:
+
+```
+    /**
+     * @param DummyServiceRequest $dummyServiceRequest
+     * @return DummyServiceResponse
+     */
+    public function dummyServiceMethod(DummyServiceRequest $dummyServiceRequest)
+    {
+        $response = new DummyServiceResponse();
+        $response->status = true;
+
+        return $response;
+    }
+```
+
+For further information and getting inspiration for your implementation, see the unit tests in ``tests`` dir. 
