@@ -58,15 +58,8 @@ php /usr/local/bin/composer.phar install
 
 # How to use
 
-You can investigate the unit tests in order to get a clue.
+You can investigate the unit tests dir ``tests`` in order to get a clue.
 Forget about associative arrays, multiple extension and silent errors! 
-
-```
-// unit tests for soap client
-BeSimple\SoapClient\Tests\SoapClientBuilderTest
-// unit tests for soap server
-BeSimple\SoapServer\Tests\SoapServerBuilderTest
-```
 
 ## Small example of soap client call
 
@@ -87,12 +80,17 @@ var_dump($soapResponse); // Contains Response, Attachments
 Turn on the tracking and catch `SoapFaultWithTracingData` exception to get some sweets :) 
 
 ```php
+$myRequest = new MyRequest();
+$myRequest->attribute = 'string value';
+
 try {
-    $soapResponse = $soapClient->soapCall('GetUKLocationByCounty', [$getUKLocationByCountyRequest]);
+    $soapResponse = $soapClient->soapCall('MyMethod', [$myRequest]);
 } catch (SoapFaultWithTracingData $fault) {
     var_dump($fault->getSoapResponseTracingData()->getLastRequest());
 }
 ```
+In this example, a ``MyRequest`` object has been used to describe request.
+Using a ClassMap, you help SoapClient to turn it into XML request.
 
 ## Small example of soap server handling
 
@@ -116,9 +114,13 @@ $request = $soapServer->createRequest(
     $dummyService->getEndpoint(),
     'DummyService.dummyServiceMethod',
     'text/xml;charset=UTF-8',
-    '<your><soap><request><here /></request></soap></your>'
+    '<received><soap><request><here /></request></soap></received>'
 );
 $response = $soapServer->handleRequest($request);
 
 var_dump($response); // Contains Response, Attachments
 ```
+In this example, a ``DummyService`` service has been used to handle request.
+Using a service can help you create coherent SoapServer endpoints.
+Service can hold an endpoint URL, WSDL path and a class map as associative array.
+You can hold a class map as ``ClassMap`` object directly in the ``DummyService`` instead of array.
