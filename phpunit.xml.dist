@@ -10,17 +10,14 @@
          stopOnFailure="false"
          syntaxCheck="false"
          stderr="true"
-         bootstrap="vendor/autoload.php"
->
-
+         bootstrap="vendor/autoload.php">
     <php>
         <const name="WEBSERVER_PORT" value="8000" />
     </php>
 
     <testsuites>
-        <testsuite name="BeSimpleSoap Test Suite">
-            <file>src/BeSimple/SoapClient/Tests/SoapClientBuilderTest.php</file>
-            <file>src/BeSimple/SoapServer/Tests/SoapServerBuilderTest.php</file>
+        <testsuite name="BeSimpleSoapTestSuite">
+            <directory>tests</directory>
         </testsuite>
     </testsuites>
 </phpunit>

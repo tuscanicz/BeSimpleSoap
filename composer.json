@@ -44,6 +44,11 @@
     "autoload": {
         "psr-0": { "BeSimple\\": "src/" }
     },
+    "autoload-dev": {
+        "psr-4": {
+            "": "tests/"
+        }
+    },
     "extra": {
         "branch-alias": {
             "dev-master": "0.4-dev"
