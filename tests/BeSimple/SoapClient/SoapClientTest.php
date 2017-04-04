@@ -3,6 +3,8 @@
 namespace BeSimple\SoapClient;
 
 use BeSimple\SoapBundle\Soap\SoapAttachment;
+use BeSimple\SoapClient\Curl\CurlOptions;
+use BeSimple\SoapClient\SoapOptions\SoapClientOptions;
 use BeSimple\SoapCommon\ClassMap;
 use BeSimple\SoapCommon\SoapOptions\SoapOptions;
 use BeSimple\SoapCommon\SoapOptionsBuilder;
@@ -182,8 +184,14 @@ class SoapClientTest extends PHPUnit_Framework_TestCase
         self::assertContains('start="<part-', $tracingData->getLastRequestHeaders(), 'Headers should link to first MultiPart');
         self::assertContains('action="', $tracingData->getLastRequestHeaders(), 'Headers should contain SOAP action');
         self::assertEquals(
-            $this->removeOneTimeData(file_get_contents(self::FIXTURES_DIR.'/soapRequestWithTwoAttachments.request')),
-            $this->removeOneTimeData($tracingData->getLastRequest()),
+            $this->removeOneTimeData(
+                file_get_contents(
+                    self::FIXTURES_DIR.'/Message/Request/GetUKLocationByCounty.request.mimepart.message'
+                )
+            ),
+            $this->removeOneTimeData(
+                $tracingData->getLastRequest()
+            ),
             'Requests must match after onetime data were removed'
         );
     }
@@ -216,7 +224,7 @@ class SoapClientTest extends PHPUnit_Framework_TestCase
         self::assertNotContains('start="<part-', $tracingData->getLastRequestHeaders(), 'Headers should link to first MultiPart');
         self::assertContains('action="', $tracingData->getLastRequestHeaders(), 'Headers should contain SOAP action');
         self::assertStringEqualsFile(
-            self::FIXTURES_DIR.'/soapRequestWithNoAttachments.request',
+            self::FIXTURES_DIR.'/Message/Request/GetUKLocationByCounty.request.message',
             $tracingData->getLastRequest(),
             'Requests must match'
         );

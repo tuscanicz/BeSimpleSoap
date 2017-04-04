@@ -75,6 +75,11 @@ abstract class PartHeader
         return null;
     }
 
+    public function getHeaders()
+    {
+        return $this->headers;
+    }
+
     /**
      * Generate headers.
      *

@@ -46,7 +46,7 @@ class SoapServerTest extends PHPUnit_Framework_TestCase
             $dummyService->getEndpoint(),
             'DummyService.dummyServiceMethod',
             'text/xml;charset=UTF-8',
-            file_get_contents(self::FIXTURES_DIR.DIRECTORY_SEPARATOR.'testHandleRequest.message')
+            file_get_contents(self::FIXTURES_DIR.'/Message/Request/dummyServiceMethod.message.request')
         );
         $response = $soapServer->handleRequest($request);
 
@@ -74,7 +74,7 @@ class SoapServerTest extends PHPUnit_Framework_TestCase
             $dummyService->getEndpoint(),
             'DummyService.dummyServiceMethodWithAttachments',
             'text/xml;charset=UTF-8',
-            file_get_contents(self::FIXTURES_DIR.DIRECTORY_SEPARATOR.'testHandleRequestWithSwa.message')
+            file_get_contents(self::FIXTURES_DIR.'/Message/Request/dummyServiceMethodWithAttachments.request.message')
         );
         $response = $soapServer->handleRequest($request);
 
@@ -83,7 +83,7 @@ class SoapServerTest extends PHPUnit_Framework_TestCase
         self::assertNotContains("\r\n", $response->getContent(), 'Response cannot contain CRLF line endings');
         self::assertContains('dummyServiceMethodWithAttachmentsResponse', $response->getContent());
         self::assertSame('DummyService.dummyServiceMethodWithAttachments', $response->getAction());
-        self::assertFalse($response->hasAttachments(), 'Response should contain attachments');
+        self::assertFalse($response->hasAttachments(), 'Response should not contain attachments');
     }
 
     public function testHandleRequestWithSwaResponse()
@@ -102,7 +102,7 @@ class SoapServerTest extends PHPUnit_Framework_TestCase
             $dummyService->getEndpoint(),
             'DummyService.dummyServiceMethodWithAttachments',
             'multipart/related; type="text/xml"; start="<rootpart@soapui.org>"; boundary="----=_Part_6_2094841787.1482231370463"',
-            file_get_contents(self::FIXTURES_DIR.DIRECTORY_SEPARATOR.'testHandleRequestWithSwa.mimepart.message')
+            file_get_contents(self::FIXTURES_DIR.'/Message/Request/dummyServiceMethodWithAttachments.request.mimepart.message')
         );
         $response = $soapServer->handleRequest($request);
 

@@ -19,6 +19,8 @@ use BeSimple\SoapClient\Curl\CurlOptionsBuilder;
 use BeSimple\SoapClient\Curl\CurlResponse;
 use BeSimple\SoapClient\SoapOptions\SoapClientOptions;
 use BeSimple\SoapCommon\Fault\SoapFaultEnum;
+use BeSimple\SoapCommon\Fault\SoapFaultPrefixEnum;
+use BeSimple\SoapCommon\Fault\SoapFaultSourceGetter;
 use BeSimple\SoapCommon\Mime\PartFactory;
 use BeSimple\SoapCommon\SoapKernel;
 use BeSimple\SoapCommon\SoapOptions\SoapOptions;
@@ -38,8 +40,11 @@ use SoapFault;
  */
 class SoapClient extends \SoapClient
 {
+    /** @var SoapClientOptions */
     protected $soapClientOptions;
+    /** @var SoapOptions */
     protected $soapOptions;
+    /** @var Curl */
     private $curl;
     /** @var SoapAttachment[] */
     private $soapAttachmentsOnRequestStorage;
@@ -110,12 +115,38 @@ class SoapClient extends \SoapClient
     public function soapCall($functionName, array $arguments, array $soapAttachments = [], array $options = null, $inputHeaders = null, array &$outputHeaders = null)
     {
         $this->setSoapAttachmentsOnRequestToStorage($soapAttachments);
-        $soapResponseAsObject = parent::__soapCall($functionName, $arguments, $options, $inputHeaders, $outputHeaders);
+        try {
 
-        $soapResponse = $this->getSoapResponseFromStorage();
-        $soapResponse->setResponseObject($soapResponseAsObject);
+            $soapResponseAsObject = parent::__soapCall($functionName, $arguments, $options, $inputHeaders, $outputHeaders);
+            $soapResponse = $this->getSoapResponseFromStorage();
+            $soapResponse->setResponseObject($soapResponseAsObject);
 
-        return $soapResponse;
+            return $soapResponse;
+
+        } catch (SoapFault $soapFault) {
+            if (SoapFaultSourceGetter::isNativeSoapFault($soapFault)) {
+                $soapResponse = $this->getSoapResponseFromStorage();
+                if ($soapResponse instanceof SoapResponse) {
+                    $soapFault = $this->throwSoapFaultByTracing(
+                        SoapFaultPrefixEnum::PREFIX_PHP . '-' . $soapFault->getCode(),
+                        $soapFault->getMessage(),
+                        new SoapResponseTracingData(
+                            'Content-Type: ' . $soapResponse->getRequest()->getContentType(),
+                            $soapResponse->getRequest()->getContent(),
+                            'Content-Type: ' . $soapResponse->getContentType(),
+                            $soapResponse->getResponseContent()
+                        )
+                    );
+                } else {
+                    $soapFault = new SoapFault(
+                        SoapFaultPrefixEnum::PREFIX_PHP . '-unresolved',
+                        'Got SoapFault message with no response: '.$soapFault->getMessage()
+                    );
+                }
+            }
+
+            throw $soapFault;
+        }
     }
 
     /**
@@ -268,7 +299,6 @@ class SoapClient extends \SoapClient
 
         if ($curlResponse->curlStatusSuccess()) {
             $soapResponse = $this->returnSoapResponseByTracing(
-                $this->soapClientOptions->getTrace(),
                 $soapRequest,
                 $curlResponse,
                 $soapResponseTracingData
@@ -288,16 +318,14 @@ class SoapClient extends \SoapClient
         } else if ($curlResponse->curlStatusFailed()) {
 
             return $this->throwSoapFaultByTracing(
-                $this->soapClientOptions->getTrace(),
-                SoapFaultEnum::SOAP_FAULT_HTTP.'-'.$curlResponse->getHttpResponseStatusCode(),
+                SoapFaultPrefixEnum::PREFIX_DEFAULT.'-'.SoapFaultEnum::SOAP_FAULT_HTTP.'-'.$curlResponse->getHttpResponseStatusCode(),
                 $curlResponse->getCurlErrorMessage(),
                 $soapResponseTracingData
             );
         } else {
 
             return $this->throwSoapFaultByTracing(
-                $this->soapClientOptions->getTrace(),
-                SoapFaultEnum::SOAP_FAULT_SOAP_CLIENT_ERROR,
+                SoapFaultPrefixEnum::PREFIX_DEFAULT.'-'.SoapFaultEnum::SOAP_FAULT_SOAP_CLIENT_ERROR,
                 'Cannot process curl response with unresolved status: ' . $curlResponse->getCurlStatus(),
                 $soapResponseTracingData
             );
@@ -341,19 +369,16 @@ class SoapClient extends \SoapClient
     }
 
     private function returnSoapResponseByTracing(
-        $isTracingEnabled,
         SoapRequest $soapRequest,
         CurlResponse $curlResponse,
         SoapResponseTracingData $soapResponseTracingData,
         array $soapAttachments = []
     ) {
-        if ($isTracingEnabled === true) {
+        if ($this->soapClientOptions->getTrace() === true) {
 
             return SoapResponseFactory::createWithTracingData(
+                $soapRequest,
                 $curlResponse->getResponseBody(),
-                $soapRequest->getLocation(),
-                $soapRequest->getAction(),
-                $soapRequest->getVersion(),
                 $curlResponse->getHttpResponseContentType(),
                 $soapResponseTracingData,
                 $soapAttachments
@@ -372,9 +397,15 @@ class SoapClient extends \SoapClient
         }
     }
 
-    private function throwSoapFaultByTracing($isTracingEnabled, $soapFaultCode, $soapFaultMessage, SoapResponseTracingData $soapResponseTracingData)
+    /**
+     * @param string $soapFaultCode
+     * @param string $soapFaultMessage
+     * @param SoapResponseTracingData $soapResponseTracingData
+     * @throws SoapFault
+     */
+    private function throwSoapFaultByTracing($soapFaultCode, $soapFaultMessage, SoapResponseTracingData $soapResponseTracingData)
     {
-        if ($isTracingEnabled === true) {
+        if ($this->soapClientOptions->getTrace() === true) {
 
             throw new SoapFaultWithTracingData(
                 $soapFaultCode,

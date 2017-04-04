@@ -4,7 +4,7 @@ namespace Fixtures;
 
 use Fixtures\Attachment\MessageWithAttachmentsTrait;
 
-class DummyServiceResponseWithAttachments
+class DummyServiceMethodWithOutgoingLargeSwaResponse
 {
     use MessageWithAttachmentsTrait;
 

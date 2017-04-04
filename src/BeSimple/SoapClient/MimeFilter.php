@@ -37,12 +37,12 @@ class MimeFilter implements SoapRequestFilter, SoapResponseFilter
             $soapPart = new MimePart($request->getContent(), 'text/xml', 'utf-8', MimePart::ENCODING_EIGHT_BIT);
             $soapVersion = $request->getVersion();
 
-            if ($soapVersion == SOAP_1_1 && $attachmentType & Helper::ATTACHMENTS_TYPE_MTOM) {
+            if ($soapVersion === SOAP_1_1 && $attachmentType & Helper::ATTACHMENTS_TYPE_MTOM) {
                 $multipart->setHeader('Content-Type', 'type', 'application/xop+xml');
                 $multipart->setHeader('Content-Type', 'start-info', 'text/xml');
                 $soapPart->setHeader('Content-Type', 'application/xop+xml');
                 $soapPart->setHeader('Content-Type', 'type', 'text/xml');
-            } elseif ($soapVersion == SOAP_1_2) {
+            } elseif ($soapVersion === SOAP_1_2) {
                 $multipart->setHeader('Content-Type', 'type', 'application/soap+xml');
                 $soapPart->setHeader('Content-Type', 'application/soap+xml');
             }

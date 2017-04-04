@@ -4,7 +4,7 @@ namespace Fixtures;
 
 use Fixtures\Attachment\MessageWithAttachmentsTrait;
 
-class DummyServiceRequestWithAttachments
+class DummyServiceMethodWithIncomingLargeSwaRequest
 {
     use MessageWithAttachmentsTrait;
 
@@ -12,9 +12,4 @@ class DummyServiceRequestWithAttachments
      * @var int $dummyAttribute
      */
     public $dummyAttribute;
-
-    /**
-     * @var bool $includeAttachments
-     */
-    public $includeAttachments;
 }

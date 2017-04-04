@@ -204,8 +204,12 @@ class SoapServer extends \SoapServer
         $attachments = [];
         if ($soapRequest->hasAttachments()) {
             foreach ($soapRequest->getAttachments() as $attachment) {
+                $fileName = $attachment->getHeader('Content-Disposition', 'filename');
+                if ($fileName === null) {
+                    $fileName = basename($attachment->getHeader('Content-Location'));
+                }
                 $attachments[] = new SoapAttachment(
-                    $attachment->getHeader('Content-Disposition', 'filename'),
+                    $fileName,
                     $attachment->getHeader('Content-Type'),
                     $attachment->getContent()
                 );

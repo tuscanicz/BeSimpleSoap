@@ -6,7 +6,7 @@ use BeSimple\SoapServer\SoapOptions\SoapServerOptions;
 
 class SoapServerOptionsBuilder
 {
-    static public function createWithDefaults($handlerClassOrObject)
+    public static function createWithDefaults($handlerClassOrObject)
     {
         return new SoapServerOptions(
             $handlerClassOrObject,

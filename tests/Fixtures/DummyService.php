@@ -34,6 +34,10 @@ class DummyService implements AttachmentsHandlerInterface
             'DummyServiceResponseWithAttachments' => DummyServiceResponseWithAttachments::class,
             'DummyServiceRequest' => DummyServiceRequest::class,
             'DummyServiceRequestWithAttachments' => DummyServiceRequestWithAttachments::class,
+            'DummyServiceMethodWithOutgoingLargeSwaRequest' => DummyServiceMethodWithOutgoingLargeSwaRequest::class,
+            'DummyServiceMethodWithOutgoingLargeSwaResponse' => DummyServiceMethodWithOutgoingLargeSwaResponse::class,
+            'DummyServiceMethodWithIncomingLargeSwaRequest' => DummyServiceMethodWithIncomingLargeSwaRequest::class,
+            'DummyServiceMethodWithIncomingLargeSwaResponse' => DummyServiceMethodWithIncomingLargeSwaResponse::class,
         ];
     }
 
@@ -63,6 +67,54 @@ class DummyService implements AttachmentsHandlerInterface
     public function dummyServiceMethod(DummyServiceRequest $dummyServiceRequest)
     {
         $dummyServiceHandler = new DummyServiceHandler();
+
+        return $dummyServiceHandler->handle($dummyServiceRequest);
+    }
+
+    /**
+     * @param DummyServiceMethodWithOutgoingLargeSwaRequest $dummyServiceRequest
+     * @return DummyServiceMethodWithOutgoingLargeSwaResponse
+     */
+    public function dummyServiceMethodWithOutgoingLargeSwa(DummyServiceMethodWithOutgoingLargeSwaRequest $dummyServiceRequest)
+    {
+        $dummyServiceHandler = new DummyServiceHandlerWithOutgoingLargeSwa();
+
+        $dummyServiceResponseWithAttachments = $dummyServiceHandler->handle($dummyServiceRequest);
+
+        if ($dummyServiceResponseWithAttachments->hasAttachments() === true) {
+            $soapAttachments = [];
+            foreach ($dummyServiceResponseWithAttachments->attachmentCollection->attachments as $attachment) {
+                $soapAttachments[] = new SoapAttachment(
+                    $attachment->fileName,
+                    $attachment->contentType,
+                    $attachment->content
+                );
+            }
+            $this->addAttachmentStorage(new RequestHandlerAttachmentsStorage($soapAttachments));
+        }
+
+        return $dummyServiceResponseWithAttachments;
+    }
+
+    /**
+     * @param DummyServiceMethodWithIncomingLargeSwaRequest $dummyServiceRequest
+     * @return DummyServiceMethodWithIncomingLargeSwaResponse
+     */
+    public function dummyServiceMethodWithIncomingLargeSwa(DummyServiceMethodWithIncomingLargeSwaRequest $dummyServiceRequest)
+    {
+        $dummyServiceHandler = new DummyServiceHandlerWithIncomingLargeSwa();
+        $attachmentStorageContents = $this->getAttachmentStorage()->getAttachments();
+        if (count($attachmentStorageContents) > 0) {
+            $attachments = [];
+            foreach ($attachmentStorageContents as $soapAttachment) {
+                $attachments[] = new Attachment(
+                    $soapAttachment->getId(),
+                    $soapAttachment->getType(),
+                    $soapAttachment->getContent()
+                );
+            }
+            $dummyServiceRequest->attachmentCollection = new AttachmentCollection($attachments);
+        }
 
         return $dummyServiceHandler->handle($dummyServiceRequest);
     }

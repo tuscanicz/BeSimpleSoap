@@ -13,6 +13,8 @@
 
 namespace BeSimple\SoapCommon;
 
+use DOMDocument;
+
 /**
  * Base class for SoapRequest and SoapResponse.
  *
@@ -72,13 +74,6 @@ abstract class SoapMessage
      * @var string
      */
     protected $content;
-
-    /**
-     *
-     * Enter description here ...
-     * @var \DOMDocument
-     */
-    protected $contentDomDocument = null;
 
     /**
      * Message content type.
@@ -170,11 +165,6 @@ abstract class SoapMessage
      */
     public function getContent()
     {
-        if ($this->contentDomDocument !== null) {
-            $this->content = $this->contentDomDocument->saveXML();
-            $this->contentDomDocument = null;
-        }
-
         return $this->content;
     }
 
@@ -186,9 +176,6 @@ abstract class SoapMessage
     public function setContent($content)
     {
         $this->content = $content;
-        if (null !== $this->contentDomDocument) {
-            $this->contentDomDocument->loadXML($this->content);
-        }
     }
 
     /**
@@ -198,12 +185,10 @@ abstract class SoapMessage
      */
     public function getContentDocument()
     {
-        if (null === $this->contentDomDocument) {
-            $this->contentDomDocument = new \DOMDocument();
-            $this->contentDomDocument->loadXML($this->content);
-        }
+        $contentDomDocument = new DOMDocument();
+        $contentDomDocument->loadXML($this->content);
 
-        return $this->contentDomDocument;
+        return $contentDomDocument;
     }
 
     /**
