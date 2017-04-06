@@ -29,25 +29,16 @@ class Parser
     /**
      * Parse the given Mime-Message and return a \BeSimple\SoapCommon\Mime\MultiPart object.
      *
-     * @param string                $mimeMessage Mime message string
-     * @param string[] $headers     array(string=>string) of header elements (e.g. coming from http request)
-     *
-     * @return \BeSimple\SoapCommon\Mime\MultiPart
+     * @param string $mimeMessage Mime message string
+     * @param string[] $headers array(string=>string) of header elements (e.g. coming from http request)
+     * @return MultiPart
      */
     public static function parseMimeMessage($mimeMessage, array $headers = [])
     {
         $multiPart = new MultiPart();
         $mimeMessageLines = explode("\n", $mimeMessage);
         $mimeMessageLineCount = count($mimeMessageLines);
-        if ($mimeMessageLineCount <= 1) {
-            throw new Exception(
-                sprintf(
-                    'Cannot process message of %d characters: got unexpectable low number of lines: %s',
-                    mb_strlen($mimeMessage),
-                    (string)$mimeMessageLineCount
-                )
-            );
-        }
+
         // add given headers, e.g. coming from HTTP headers
         if (count($headers) > 0) {
             self::setMultiPartHeaders($multiPart, $headers);
@@ -56,6 +47,15 @@ class Parser
             $hasHttpRequestHeaders = ParsedPartsGetter::HAS_NO_HTTP_REQUEST_HEADERS;
         }
         if (MimeBoundaryAnalyser::hasMessageBoundary($mimeMessageLines) === true) {
+            if ($mimeMessageLineCount <= 1) {
+                throw new Exception(
+                    sprintf(
+                        'Cannot parse MultiPart message of %d characters: got unexpectable low number of lines: %s',
+                        mb_strlen($mimeMessage),
+                        (string)$mimeMessageLineCount
+                    )
+                );
+            }
             $parsedPartList = ParsedPartsGetter::getPartsFromMimeMessageLines(
                 $multiPart,
                 $mimeMessageLines,

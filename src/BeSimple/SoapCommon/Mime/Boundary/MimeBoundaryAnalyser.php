@@ -21,6 +21,7 @@ class MimeBoundaryAnalyser
     }
 
     /**
+     * @todo: This method is not reliable at all
      * @param string $mimeMessageLine
      * @return bool
      */
