@@ -1,7 +1,7 @@
 {
     "name": "tuscanicz/soap",
     "type": "library",
-    "description": "A fork of the abandoned besimple/soap package with added support for Symfony 3.0",
+    "description": "A largely refactored besimple/soap used to build SOAP and WSDL based web services. This fork fixes a lot of errors and provides better API, robust, stable and modern codebase.",
     "keywords": ["soap", "soap server", "soap client"],
     "license": "MIT",
     "authors": [
