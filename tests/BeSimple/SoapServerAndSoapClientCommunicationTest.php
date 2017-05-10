@@ -24,7 +24,6 @@ class SoapServerAndSoapClientCommunicationTest extends PHPUnit_Framework_TestCas
     const CACHE_DIR = __DIR__ . '/../../cache';
     const FIXTURES_DIR = __DIR__ . '/../Fixtures';
     const TEST_HTTP_URL = 'http://localhost:8000/tests';
-    const TEST_LOCAL_WSDL_UK = SoapClientBuilderTest::TEST_LOCAL_WSDL_UK;
     const LARGE_SWA_FILE = self::FIXTURES_DIR.'/large-test-file.docx';
 
     private $localWebServerProcess;

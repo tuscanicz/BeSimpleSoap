@@ -13,13 +13,13 @@ class SoapFaultSourceGetter
 
     public static function isBeSimpleSoapFault(SoapFault $soapFault)
     {
-        $defaultPrefix = SoapFaultPrefixEnum::PREFIX_DEFAULT;
+        $nativeSoapFaultPrefix = SoapFaultPrefixEnum::PREFIX_DEFAULT.'-';
 
-        if (strpos($soapFault->getCode(), $defaultPrefix) === 0) {
+        if (strpos($soapFault->faultcode, $nativeSoapFaultPrefix) === 0) {
 
-            return false;
+            return true;
         }
 
-        return true;
+        return false;
     }
 }

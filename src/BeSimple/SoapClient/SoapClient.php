@@ -318,14 +318,14 @@ class SoapClient extends \SoapClient
         } else if ($curlResponse->curlStatusFailed()) {
 
             return $this->throwSoapFaultByTracing(
-                SoapFaultPrefixEnum::PREFIX_DEFAULT.'-'.SoapFaultEnum::SOAP_FAULT_HTTP.'-'.$curlResponse->getHttpResponseStatusCode(),
+                SoapFaultEnum::SOAP_FAULT_HTTP.'-'.$curlResponse->getHttpResponseStatusCode(),
                 $curlResponse->getCurlErrorMessage(),
                 $soapResponseTracingData
             );
         } else {
 
             return $this->throwSoapFaultByTracing(
-                SoapFaultPrefixEnum::PREFIX_DEFAULT.'-'.SoapFaultEnum::SOAP_FAULT_SOAP_CLIENT_ERROR,
+                SoapFaultEnum::SOAP_FAULT_SOAP_CLIENT_ERROR,
                 'Cannot process curl response with unresolved status: ' . $curlResponse->getCurlStatus(),
                 $soapResponseTracingData
             );

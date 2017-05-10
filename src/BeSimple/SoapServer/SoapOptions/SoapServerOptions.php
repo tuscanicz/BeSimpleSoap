@@ -121,6 +121,7 @@ class SoapServerOptions
     {
         $optionsAsArray = [
             'keep_alive' => $this->isKeepAlive(),
+            'exceptions' => $this->isExceptions(),
         ];
 
         return $optionsAsArray;
