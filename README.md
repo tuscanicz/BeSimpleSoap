@@ -47,7 +47,7 @@ Create a `composer.json` file:
 ```json
 {
     "require": {
-        "besimple/soap": "0.2.*@dev"
+        "tuscanicz/soap": "^4.2"
     }
 }
 ```
