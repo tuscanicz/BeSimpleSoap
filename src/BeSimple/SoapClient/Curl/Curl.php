@@ -152,10 +152,11 @@ class Curl
         preg_match('/HTTP\/(1\.[0-1]+) ([0-9]{3}) (.*)/', $executeSoapCallResponse, $httpResponseMessages);
         $httpResponseMessage = trim(array_pop($httpResponseMessages));
         $curlErrorMessage = sprintf(
-            'Curl error "%s" with message: %s occurred while connecting to %s',
+            'Curl error "%s" with message: %s occurred while connecting to %s with HTTP response code %s',
             curl_errno($curlSession),
             curl_error($curlSession),
-            $location
+            $location,
+            $httpResponseCode
         );
 
         if (!is_integer($httpResponseCode) || $httpResponseCode >= 400 || $httpResponseCode === 0) {

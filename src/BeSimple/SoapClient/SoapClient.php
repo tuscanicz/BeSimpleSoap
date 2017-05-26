@@ -19,6 +19,7 @@ use BeSimple\SoapClient\Curl\CurlOptionsBuilder;
 use BeSimple\SoapClient\Curl\CurlResponse;
 use BeSimple\SoapClient\SoapOptions\SoapClientOptions;
 use BeSimple\SoapCommon\Fault\SoapFaultEnum;
+use BeSimple\SoapCommon\Fault\SoapFaultParser;
 use BeSimple\SoapCommon\Fault\SoapFaultPrefixEnum;
 use BeSimple\SoapCommon\Fault\SoapFaultSourceGetter;
 use BeSimple\SoapCommon\Mime\PartFactory;
@@ -40,16 +41,14 @@ use SoapFault;
  */
 class SoapClient extends \SoapClient
 {
+    use SoapClientNativeMethodsTrait;
+
     /** @var SoapClientOptions */
     protected $soapClientOptions;
     /** @var SoapOptions */
     protected $soapOptions;
     /** @var Curl */
     private $curl;
-    /** @var SoapAttachment[] */
-    private $soapAttachmentsOnRequestStorage;
-    /** @var SoapResponse */
-    private $soapResponseStorage;
 
     public function __construct(SoapClientOptions $soapClientOptions, SoapOptions $soapOptions)
     {
@@ -77,33 +76,6 @@ class SoapClient extends \SoapClient
     }
 
     /**
-     * Avoid using __call directly, it's deprecated even in \SoapClient.
-     *
-     * @deprecated
-     */
-    public function __call($function_name, $arguments)
-    {
-        throw new Exception(
-            'The __call method is deprecated. Use __soapCall/soapCall  instead.'
-        );
-    }
-
-    /**
-     * Using __soapCall returns only response string, use soapCall instead.
-     *
-     * @param string $function_name
-     * @param array $arguments
-     * @param array|null $options
-     * @param null $input_headers
-     * @param array|null $output_headers
-     * @return string
-     */
-    public function __soapCall($function_name, $arguments, $options = null, $input_headers = null, &$output_headers = null)
-    {
-        return $this->soapCall($function_name, $arguments, $options, $input_headers, $output_headers)->getResponseContent();
-    }
-
-    /**
      * @param string $functionName
      * @param array $arguments
      * @param array|null $options
@@ -125,93 +97,11 @@ class SoapClient extends \SoapClient
 
         } catch (SoapFault $soapFault) {
             if (SoapFaultSourceGetter::isNativeSoapFault($soapFault)) {
-                $soapResponse = $this->getSoapResponseFromStorage();
-                if ($soapResponse instanceof SoapResponse) {
-                    $soapFault = $this->throwSoapFaultByTracing(
-                        SoapFaultPrefixEnum::PREFIX_PHP . '-' . $soapFault->getCode(),
-                        $soapFault->getMessage(),
-                        new SoapResponseTracingData(
-                            'Content-Type: ' . $soapResponse->getRequest()->getContentType(),
-                            $soapResponse->getRequest()->getContent(),
-                            'Content-Type: ' . $soapResponse->getContentType(),
-                            $soapResponse->getResponseContent()
-                        )
-                    );
-                } else {
-                    $soapFault = new SoapFault(
-                        SoapFaultPrefixEnum::PREFIX_PHP . '-unresolved',
-                        'Got SoapFault message with no response: '.$soapFault->getMessage()
-                    );
-                }
+                $soapFault = $this->decorateNativeSoapFault($soapFault);
             }
 
             throw $soapFault;
         }
-    }
-
-    /**
-     * This is not performing any HTTP requests, but it is getting data from SoapClient that are needed for this Client
-     *
-     * @param string $request  Request string
-     * @param string $location Location
-     * @param string $action   SOAP action
-     * @param int    $version  SOAP version
-     * @param int    $oneWay   0|1
-     *
-     * @return string
-     */
-    public function __doRequest($request, $location, $action, $version, $oneWay = 0)
-    {
-        $soapResponse = $this->performSoapRequest(
-            $request,
-            $location,
-            $action,
-            $version,
-            $this->getSoapAttachmentsOnRequestFromStorage()
-        );
-        $this->setSoapResponseToStorage($soapResponse);
-
-        return $soapResponse->getResponseContent();
-    }
-
-    /** @deprecated */
-    public function __getLastRequestHeaders()
-    {
-        $this->checkTracing();
-
-        throw new Exception(
-            'The __getLastRequestHeaders method is now deprecated. Use callSoapRequest instead and get the tracing information from SoapResponseTracingData.'
-        );
-    }
-
-    /** @deprecated */
-    public function __getLastRequest()
-    {
-        $this->checkTracing();
-
-        throw new Exception(
-            'The __getLastRequest method is now deprecated. Use callSoapRequest instead and get the tracing information from SoapResponseTracingData.'
-        );
-    }
-
-    /** @deprecated */
-    public function __getLastResponseHeaders()
-    {
-        $this->checkTracing();
-
-        throw new Exception(
-            'The __getLastResponseHeaders method is now deprecated. Use callSoapRequest instead and get the tracing information from SoapResponseTracingData.'
-        );
-    }
-
-    /** @deprecated */
-    public function __getLastResponse()
-    {
-        $this->checkTracing();
-
-        throw new Exception(
-            'The __getLastResponse method is now deprecated. Use callSoapRequest instead and get the tracing information from SoapResponseTracingData.'
-        );
     }
 
     /**
@@ -226,7 +116,7 @@ class SoapClient extends \SoapClient
      *
      * @return SoapResponse
      */
-    private function performSoapRequest($request, $location, $action, $version, array $soapAttachments = [])
+    protected function performSoapRequest($request, $location, $action, $version, array $soapAttachments = [])
     {
         $soapRequest = $this->createSoapRequest($location, $action, $version, $request, $soapAttachments);
 
@@ -273,22 +163,10 @@ class SoapClient extends \SoapClient
      */
     private function performHttpSoapRequest(SoapRequest $soapRequest)
     {
-        if ($soapRequest->getVersion() === SOAP_1_1) {
-            $headers = [
-                'Content-Type: ' . $soapRequest->getContentType(),
-                'SOAPAction: "' . $soapRequest->getAction() . '"',
-                'Connection: ' . ($this->soapOptions->isConnectionKeepAlive() ? 'Keep-Alive' : 'close'),
-            ];
-        } else {
-            $headers = [
-                'Content-Type: ' . $soapRequest->getContentType() . '; action="' . $soapRequest->getAction() . '"',
-                'Connection: ' . ($this->soapOptions->isConnectionKeepAlive() ? 'Keep-Alive' : 'close'),
-            ];
-        }
         $curlResponse = $this->curl->executeCurlWithCachedSession(
             $soapRequest->getLocation(),
             $soapRequest->getContent(),
-            $headers
+            $this->getHttpHeadersBySoapVersion($soapRequest)
         );
         $soapResponseTracingData = new SoapResponseTracingData(
             $curlResponse->getHttpRequestHeaders(),
@@ -310,26 +188,42 @@ class SoapClient extends \SoapClient
                     $this->getAttachmentFilters(),
                     $this->soapOptions->getAttachmentType()
                 );
-
-            } else {
-
-                return $soapResponse;
             }
-        } else if ($curlResponse->curlStatusFailed()) {
+
+            return $soapResponse;
+
+        }
+        if ($curlResponse->curlStatusFailed()) {
+
+            if ($curlResponse->getHttpResponseStatusCode() >= 500) {
+                $soapFault = SoapFaultParser::parseSoapFault(
+                    $curlResponse->getResponseBody()
+                );
+
+                return $this->throwSoapFaultByTracing(
+                    $soapFault->faultcode,
+                    sprintf(
+                        'SOAP HTTP call failed: %s with Message: %s and Code: %s',
+                        $curlResponse->getCurlErrorMessage(),
+                        $soapFault->getMessage(),
+                        $soapFault->faultcode
+                    ),
+                    $soapResponseTracingData
+                );
+            }
 
             return $this->throwSoapFaultByTracing(
                 SoapFaultEnum::SOAP_FAULT_HTTP.'-'.$curlResponse->getHttpResponseStatusCode(),
                 $curlResponse->getCurlErrorMessage(),
                 $soapResponseTracingData
             );
-        } else {
-
-            return $this->throwSoapFaultByTracing(
-                SoapFaultEnum::SOAP_FAULT_SOAP_CLIENT_ERROR,
-                'Cannot process curl response with unresolved status: ' . $curlResponse->getCurlStatus(),
-                $soapResponseTracingData
-            );
         }
+
+        return $this->throwSoapFaultByTracing(
+            SoapFaultEnum::SOAP_FAULT_SOAP_CLIENT_ERROR,
+            'Cannot process curl response with unresolved status: ' . $curlResponse->getCurlStatus(),
+            $soapResponseTracingData
+        );
     }
 
     /**
@@ -383,18 +277,16 @@ class SoapClient extends \SoapClient
                 $soapResponseTracingData,
                 $soapAttachments
             );
-
-        } else {
-
-            return SoapResponseFactory::create(
-                $curlResponse->getResponseBody(),
-                $soapRequest->getLocation(),
-                $soapRequest->getAction(),
-                $soapRequest->getVersion(),
-                $curlResponse->getHttpResponseContentType(),
-                $soapAttachments
-            );
         }
+
+        return SoapResponseFactory::create(
+            $curlResponse->getResponseBody(),
+            $soapRequest->getLocation(),
+            $soapRequest->getAction(),
+            $soapRequest->getVersion(),
+            $curlResponse->getHttpResponseContentType(),
+            $soapAttachments
+        );
     }
 
     /**
@@ -412,49 +304,59 @@ class SoapClient extends \SoapClient
                 $soapFaultMessage,
                 $soapResponseTracingData
             );
+        }
 
+        throw new SoapFault(
+            $soapFaultCode,
+            $soapFaultMessage
+        );
+    }
+
+    private function decorateNativeSoapFault(SoapFault $nativePhpSoapFault)
+    {
+        $soapResponse = $this->getSoapResponseFromStorage();
+        if ($soapResponse instanceof SoapResponse) {
+            $tracingData = new SoapResponseTracingData(
+                'Content-Type: ' . $soapResponse->getRequest()->getContentType(),
+                $soapResponse->getRequest()->getContent(),
+                'Content-Type: ' . $soapResponse->getContentType(),
+                $soapResponse->getResponseContent()
+            );
+            $soapFault = $this->throwSoapFaultByTracing(
+                SoapFaultPrefixEnum::PREFIX_PHP . '-' . $nativePhpSoapFault->getCode(),
+                $nativePhpSoapFault->getMessage(),
+                $tracingData
+            );
         } else {
-
-            throw new SoapFault(
-                $soapFaultCode,
-                $soapFaultMessage
+            $soapFault = $this->throwSoapFaultByTracing(
+                $nativePhpSoapFault->faultcode,
+                $nativePhpSoapFault->getMessage(),
+                new SoapResponseTracingData(
+                    null,
+                    null,
+                    null,
+                    null
+                )
             );
         }
+
+        return $soapFault;
     }
 
-    private function checkTracing()
+    private function getHttpHeadersBySoapVersion(SoapRequest $soapRequest)
     {
-        if ($this->soapClientOptions->getTrace() === false) {
-            throw new Exception('SoapClientOptions tracing disabled, turn on trace attribute');
+        if ($soapRequest->getVersion() === SOAP_1_1) {
+
+            return [
+                'Content-Type: ' . $soapRequest->getContentType(),
+                'SOAPAction: "' . $soapRequest->getAction() . '"',
+                'Connection: ' . ($this->soapOptions->isConnectionKeepAlive() ? 'Keep-Alive' : 'close'),
+            ];
         }
-    }
 
-    private function setSoapResponseToStorage(SoapResponse $soapResponseStorage)
-    {
-        $this->soapResponseStorage = $soapResponseStorage;
-    }
-
-    /**
-     * @param SoapAttachment[] $soapAttachments
-     */
-    private function setSoapAttachmentsOnRequestToStorage(array $soapAttachments)
-    {
-        $this->soapAttachmentsOnRequestStorage = $soapAttachments;
-    }
-
-    private function getSoapAttachmentsOnRequestFromStorage()
-    {
-        $soapAttachmentsOnRequest = $this->soapAttachmentsOnRequestStorage;
-        $this->soapAttachmentsOnRequestStorage = null;
-
-        return $soapAttachmentsOnRequest;
-    }
-
-    private function getSoapResponseFromStorage()
-    {
-        $soapResponse = $this->soapResponseStorage;
-        $this->soapResponseStorage = null;
-
-        return $soapResponse;
+        return [
+            'Content-Type: ' . $soapRequest->getContentType() . '; action="' . $soapRequest->getAction() . '"',
+            'Connection: ' . ($this->soapOptions->isConnectionKeepAlive() ? 'Keep-Alive' : 'close'),
+        ];
     }
 }

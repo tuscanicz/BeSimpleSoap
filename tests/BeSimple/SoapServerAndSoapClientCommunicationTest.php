@@ -17,6 +17,7 @@ use Fixtures\DummyServiceMethodWithIncomingLargeSwaRequest;
 use Fixtures\DummyServiceMethodWithOutgoingLargeSwaRequest;
 use Fixtures\GenerateTestRequest;
 use PHPUnit_Framework_TestCase;
+use SoapFault;
 use SoapHeader;
 
 class SoapServerAndSoapClientCommunicationTest extends PHPUnit_Framework_TestCase
@@ -122,6 +123,44 @@ class SoapServerAndSoapClientCommunicationTest extends PHPUnit_Framework_TestCas
             filesize(self::CACHE_DIR.'/attachment-client-response-filename.docx'),
             'File cannot differ after transport from SoapClient to SoapServer'
         );
+    }
+
+    public function testSoapCallSwaWithLargeSwaResponseWithSoapFault()
+    {
+        $soapClient = $this->getSoapBuilder()->buildWithSoapHeader(
+            SoapClientOptionsBuilder::createWithEndpointLocation(
+                self::TEST_HTTP_URL.'/SwaSenderSoapFaultEndpoint.php'
+            ),
+            SoapOptionsBuilder::createSwaWithClassMap(
+                self::TEST_HTTP_URL.'/SwaSenderEndpoint.php?wsdl',
+                new ClassMap([
+                    'GenerateTestRequest' => GenerateTestRequest::class,
+                ]),
+                SoapOptions::SOAP_CACHE_TYPE_NONE
+            ),
+            new SoapHeader('http://schema.testcase', 'SoapHeader', [
+                'user' => 'admin',
+            ])
+        );
+
+        $this->setExpectedException(SoapFault::class);
+
+        try {
+            $soapClient->soapCall('dummyServiceMethodWithOutgoingLargeSwa', []);
+        } catch (SoapFault $e) {
+            self::assertEquals(
+                '911',
+                $e->faultcode
+            );
+            self::assertEquals(
+                'SOAP HTTP call failed: Curl error "0" with message:  occurred while connecting to http://localhost:8000/tests/SwaSenderSoapFaultEndpoint.php with HTTP response code 500 with Message: This is a dummy SoapFault. and Code: 911',
+                $e->getMessage()
+            );
+
+            throw $e;
+        }
+
+        self::fail('Expected SoapFault was not thrown');
     }
 
     public function testSoapCallWithLargeSwaRequest()
