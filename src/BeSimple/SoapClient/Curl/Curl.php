@@ -92,7 +92,7 @@ class Curl
         curl_setopt($curlSession, CURLOPT_URL, $location);
         curl_setopt($curlSession, CURLOPT_HEADER, true);
         curl_setopt($curlSession, CURLOPT_RETURNTRANSFER, true);
-        if (!is_null($request)) {
+        if ($request !== null) {
             curl_setopt($curlSession, CURLOPT_POST, true);
             curl_setopt($curlSession, CURLOPT_POSTFIELDS, $request);
         } else {
@@ -162,25 +162,25 @@ class Curl
         if (!is_integer($httpResponseCode) || $httpResponseCode >= 400 || $httpResponseCode === 0) {
 
             return new CurlResponse(
-                $httpRequestHeadersAsString,
+                $this->normalizeStringOrFalse($httpRequestHeadersAsString),
                 $httpResponseCode,
                 $httpResponseMessage,
                 $httpResponseContentType,
                 self::CURL_FAILED,
-                $responseHeaders,
-                $responseBody,
+                $this->normalizeStringOrFalse($responseHeaders),
+                $this->normalizeStringOrFalse($responseBody),
                 $curlErrorMessage
             );
         }
 
         return new CurlResponse(
-            $httpRequestHeadersAsString,
+            $this->normalizeStringOrFalse($httpRequestHeadersAsString),
             $httpResponseCode,
             $httpResponseMessage,
             $httpResponseContentType,
             self::CURL_SUCCESS,
-            $responseHeaders,
-            $responseBody
+            $this->normalizeStringOrFalse($responseHeaders),
+            $this->normalizeStringOrFalse($responseBody)
         );
     }
 
@@ -234,5 +234,14 @@ class Curl
         }
 
         throw new Exception('Cannot parse WSDL url redirect: ' . $url);
+    }
+
+    private function normalizeStringOrFalse($string)
+    {
+        if ($string === false || $string === '') {
+            $string = null;
+        }
+
+        return $string;
     }
 }

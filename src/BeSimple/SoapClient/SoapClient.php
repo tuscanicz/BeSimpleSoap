@@ -316,31 +316,48 @@ class SoapClient extends \SoapClient
     {
         $soapResponse = $this->getSoapResponseFromStorage();
         if ($soapResponse instanceof SoapResponse) {
-            $tracingData = new SoapResponseTracingData(
-                'Content-Type: ' . $soapResponse->getRequest()->getContentType(),
-                $soapResponse->getRequest()->getContent(),
-                'Content-Type: ' . $soapResponse->getContentType(),
-                $soapResponse->getResponseContent()
-            );
             $soapFault = $this->throwSoapFaultByTracing(
                 SoapFaultPrefixEnum::PREFIX_PHP . '-' . $nativePhpSoapFault->getCode(),
                 $nativePhpSoapFault->getMessage(),
-                $tracingData
+                $this->getSoapResponseTracingDataFromNativeSoapFault(
+                    $nativePhpSoapFault,
+                    new SoapResponseTracingData(
+                        'Content-Type: '.$soapResponse->getRequest()->getContentType(),
+                        $soapResponse->getRequest()->getContent(),
+                        'Content-Type: '.$soapResponse->getContentType(),
+                        $soapResponse->getResponseContent()
+                    )
+                )
             );
         } else {
             $soapFault = $this->throwSoapFaultByTracing(
                 $nativePhpSoapFault->faultcode,
                 $nativePhpSoapFault->getMessage(),
-                new SoapResponseTracingData(
-                    null,
-                    null,
-                    null,
-                    null
+                $this->getSoapResponseTracingDataFromNativeSoapFault(
+                    $nativePhpSoapFault,
+                    new SoapResponseTracingData(
+                        null,
+                        null,
+                        null,
+                        null
+                    )
                 )
             );
         }
 
         return $soapFault;
+    }
+
+    private function getSoapResponseTracingDataFromNativeSoapFault(
+        SoapFault $nativePhpSoapFault,
+        SoapResponseTracingData $defaultSoapFaultTracingData
+    ) {
+        if ($nativePhpSoapFault instanceof SoapFaultWithTracingData) {
+
+            return $nativePhpSoapFault->getSoapResponseTracingData();
+        }
+
+        return $defaultSoapFaultTracingData;
     }
 
     private function getHttpHeadersBySoapVersion(SoapRequest $soapRequest)
