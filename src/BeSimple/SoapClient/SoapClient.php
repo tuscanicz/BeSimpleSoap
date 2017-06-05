@@ -123,6 +123,16 @@ class SoapClient extends \SoapClient
         return $this->performHttpSoapRequest($soapRequest);
     }
 
+    protected function getSoapClientOptions()
+    {
+        return $this->soapClientOptions;
+    }
+
+    protected function getSoapOptions()
+    {
+        return $this->soapOptions;
+    }
+
     /**
      * @param string                $location           Location
      * @param string                $action             SOAP action

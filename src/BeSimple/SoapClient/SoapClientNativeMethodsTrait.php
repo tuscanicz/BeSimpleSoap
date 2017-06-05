@@ -4,12 +4,11 @@ namespace BeSimple\SoapClient;
 
 use BeSimple\SoapBundle\Soap\SoapAttachment;
 use BeSimple\SoapClient\SoapOptions\SoapClientOptions;
+use BeSimple\SoapCommon\SoapOptions\SoapOptions;
 use Exception;
 
 trait SoapClientNativeMethodsTrait
 {
-    /** @var SoapClientOptions */
-    protected $soapClientOptions;
     /** @var SoapAttachment[] */
     private $soapAttachmentsOnRequestStorage;
     /** @var SoapResponse */
@@ -35,6 +34,16 @@ trait SoapClientNativeMethodsTrait
      * @return SoapResponse
      */
     abstract protected function performSoapRequest($request, $location, $action, $version, array $soapAttachments = []);
+
+    /**
+     * @return SoapClientOptions
+     */
+    abstract protected function getSoapClientOptions();
+
+    /**
+     * @return SoapOptions
+     */
+    abstract protected function getSoapOptions();
 
     /**
      * Avoid using __call directly, it's deprecated even in \SoapClient.
@@ -130,7 +139,7 @@ trait SoapClientNativeMethodsTrait
 
     private function checkTracing()
     {
-        if ($this->soapClientOptions->getTrace() === false) {
+        if ($this->getSoapClientOptions()->getTrace() === false) {
             throw new Exception('SoapClientOptions tracing disabled, turn on trace attribute');
         }
     }
