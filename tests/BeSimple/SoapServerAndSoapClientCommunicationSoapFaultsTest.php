@@ -36,7 +36,7 @@ class SoapServerAndSoapClientCommunicationSoapFaultsTest extends PHPUnit_Framewo
 
     public function testSoapCallSwaWithLargeSwaResponseWithSoapFault()
     {
-        $soapClient = $this->getSoapBuilder()->buildWithSoapHeader(
+        $soapClient = $this->getSoapClientBuilder()->buildWithSoapHeader(
             SoapClientOptionsBuilder::createWithEndpointLocation(
                 self::TEST_HTTP_URL.'/SwaSenderSoapFaultEndpoint.php'
             ),
@@ -91,7 +91,7 @@ class SoapServerAndSoapClientCommunicationSoapFaultsTest extends PHPUnit_Framewo
 
     public function testSoapCallSwaWithLargeSwaResponseWithNoResponseFromEndpoint()
     {
-        $soapClient = $this->getSoapBuilder()->buildWithSoapHeader(
+        $soapClient = $this->getSoapClientBuilder()->buildWithSoapHeader(
             SoapClientOptionsBuilder::createWithEndpointLocation(
                 self::TEST_HTTP_URL.'/NoSuchEndpointExists'
             ),
@@ -150,7 +150,7 @@ class SoapServerAndSoapClientCommunicationSoapFaultsTest extends PHPUnit_Framewo
 
     public function testSoapCallSwaWithLargeSwaResponseWithNoResponseFromEndpointHost()
     {
-        $soapClient = $this->getSoapBuilder()->buildWithSoapHeader(
+        $soapClient = $this->getSoapClientBuilder()->buildWithSoapHeader(
             SoapClientOptionsBuilder::createWithEndpointLocation(
                 self::TEST_HTTP_URL_INVALID.'/NoSuchEndpointExists'
             ),
@@ -181,7 +181,7 @@ class SoapServerAndSoapClientCommunicationSoapFaultsTest extends PHPUnit_Framewo
                 $e->faultcode
             );
             self::assertContains(
-                'Could not resolve host',
+                't resolve host',
                 $e->getMessage()
             );
             self::assertNull(
@@ -204,7 +204,7 @@ class SoapServerAndSoapClientCommunicationSoapFaultsTest extends PHPUnit_Framewo
         self::fail('Expected SoapFault was not thrown');
     }
 
-    private function getSoapBuilder()
+    private function getSoapClientBuilder()
     {
         return new SoapClientBuilder();
     }

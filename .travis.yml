@@ -12,6 +12,7 @@ before_script:
   - composer self-update
   - composer install
   - cp phpunit.xml.dist phpunit.xml
+  - php -S localhost:8000 > /dev/null 2>&1 &
 
 script:
   - vendor/phing/phing/bin/phing -f build.xml

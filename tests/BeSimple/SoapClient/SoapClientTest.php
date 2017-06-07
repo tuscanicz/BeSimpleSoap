@@ -75,7 +75,7 @@ class SoapClientTest extends PHPUnit_Framework_TestCase
 
     public function testSoapCallWithCustomEndpointInvalidShouldFail()
     {
-        $this->setExpectedException(Exception::class, 'Could not resolve host');
+        $this->setExpectedException(Exception::class, 't resolve host');
 
         $soapClient = $this->getSoapBuilder()->build(
             SoapClientOptionsBuilder::createWithEndpointLocation(self::TEST_REMOTE_ENDPOINT_NOT_WORKING),
