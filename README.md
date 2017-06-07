@@ -145,3 +145,11 @@ See a simplified implementation of ``dummyServiceMethod`` to get a clue:
 ```
 
 For further information and getting inspiration for your implementation, see the unit tests in ``tests`` dir. 
+
+# Contribute
+
+[![Build Status](https://travis-ci.org/tuscanicz/BeSimpleSoap.svg?branch=master)](https://travis-ci.org/tuscanicz/BeSimpleSoap)
+
+Feel free to contribute! Please, run the tests via Phing ``php phing -f build.xml``.
+
+**Warning:** Unit tests may fail under Windows OS, tested under Linux, MacOS.
