@@ -104,10 +104,11 @@ class WsSecurityFilter extends WsSecurityFilterClientServer implements SoapReque
      * Modify the given request XML.
      *
      * @param \BeSimple\SoapCommon\SoapRequest $request SOAP request
+     * @param int $attachmentType
      *
      * @return void
      */
-    public function filterRequest(CommonSoapRequest $request)
+    public function filterRequest(CommonSoapRequest $request, $attachmentType)
     {
         // get \DOMDocument from SOAP request
         $dom = $request->getContentDocument();
@@ -174,7 +175,7 @@ class WsSecurityFilter extends WsSecurityFilterClientServer implements SoapReque
         }
 
         if (null !== $this->userSecurityKey && $this->userSecurityKey->hasKeys()) {
-            $guid = 'CertId-' . Helper::generateUUID();
+            $guid = 'CertId-' . Helper::generateUuid();
             // add token references
             $keyInfo = null;
             if (null !== $this->tokenReferenceSignature) {
@@ -200,7 +201,7 @@ class WsSecurityFilter extends WsSecurityFilterClientServer implements SoapReque
 
             // encrypt soap document
             if (null !== $this->serviceSecurityKey && $this->serviceSecurityKey->hasKeys()) {
-                $guid = 'EncKey-' . Helper::generateUUID();
+                $guid = 'EncKey-' . Helper::generateUuid();
                 // add token references
                 $keyInfo = null;
                 if (null !== $this->tokenReferenceEncryption) {
@@ -226,10 +227,11 @@ class WsSecurityFilter extends WsSecurityFilterClientServer implements SoapReque
      * Modify the given request XML.
      *
      * @param \BeSimple\SoapCommon\SoapResponse $response SOAP response
+     * @param int $attachmentType
      *
      * @return void
      */
-    public function filterResponse(CommonSoapResponse $response)
+    public function filterResponse(CommonSoapResponse $response, $attachmentType)
     {
         // get \DOMDocument from SOAP response
         $dom = $response->getContentDocument();

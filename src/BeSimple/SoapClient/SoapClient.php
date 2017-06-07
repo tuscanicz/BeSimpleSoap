@@ -43,8 +43,6 @@ class SoapClient extends \SoapClient
 {
     use SoapClientNativeMethodsTrait;
 
-    /** @var SoapClientOptions */
-    protected $soapClientOptions;
     /** @var SoapOptions */
     protected $soapOptions;
     /** @var Curl */

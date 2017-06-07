@@ -167,12 +167,13 @@ class Helper
      * @see http://de.php.net/manual/en/function.uniqid.php#94959
      * @return string
      */
-    public static function generateUUID()
+    public static function generateUuid()
     {
         return sprintf(
             '%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
             // 32 bits for "time_low"
-            mt_rand(0, 0xffff), mt_rand(0, 0xffff),
+            mt_rand(0, 0xffff),
+            mt_rand(0, 0xffff),
             // 16 bits for "time_mid"
             mt_rand(0, 0xffff),
             // 16 bits for "time_hi_and_version",
@@ -183,7 +184,9 @@ class Helper
             // two most significant bits holds zero and one for variant DCE1.1
             mt_rand(0, 0x3fff) | 0x8000,
             // 48 bits for "node"
-            mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff)
+            mt_rand(0, 0xffff),
+            mt_rand(0, 0xffff),
+            mt_rand(0, 0xffff)
         );
     }
 
@@ -198,9 +201,9 @@ class Helper
     {
         if ($version === SOAP_1_2) {
             return self::NS_SOAP_1_2;
-        } else {
-            return self::NS_SOAP_1_1;
         }
+
+        return self::NS_SOAP_1_1;
     }
 
     /**
@@ -214,8 +217,8 @@ class Helper
     {
         if ($namespace === self::NS_SOAP_1_2) {
             return SOAP_1_2;
-        } else {
-            return SOAP_1_1;
         }
+
+        return SOAP_1_1;
     }
 }

@@ -11,11 +11,11 @@
 namespace BeSimple\SoapBundle\Util;
 
 /**
- * String provides utility methods for strings.
+ * StringUtility provides utility methods for strings.
  *
  * @author Christian Kerl <christian-kerl@web.de>
  */
-class String
+class StringUtility
 {
     /**
      * Checks if a string starts with a given string.

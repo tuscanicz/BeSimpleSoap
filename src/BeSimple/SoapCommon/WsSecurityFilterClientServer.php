@@ -325,7 +325,6 @@ abstract class WsSecurityFilterClientServer
             if (Helper::NS_WSS === $key->namespaceURI) {
                 switch ($key->localName) {
                     case 'KeyIdentifier':
-
                         return $this->serviceSecurityKey->getPublicKey();
                     case 'Reference':
                         $uri = $key->getAttribute('URI');
@@ -336,7 +335,8 @@ abstract class WsSecurityFilterClientServer
                             $key = XmlSecurityEnc::decryptEncryptedKey($referencedNode, $this->userSecurityKey->getPrivateKey());
 
                             return XmlSecurityKey::factory($algorithm, $key, false, XmlSecurityKey::TYPE_PRIVATE);
-                        } elseif (Helper::NS_WSS === $referencedNode->namespaceURI
+                        }
+                        if (Helper::NS_WSS === $referencedNode->namespaceURI
                                 && 'BinarySecurityToken' == $referencedNode->localName) {
 
                             $key = XmlSecurityPem::formatKeyInPemFormat($referencedNode->textContent);

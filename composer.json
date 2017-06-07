@@ -39,7 +39,11 @@
     "require-dev": {
         "ext-mcrypt": "*",
         "mikey179/vfsStream": "~1.0",
-        "phpunit/phpunit": "~4.0"
+        "phpunit/phpunit": "~4.0",
+        "phpstan/phpstan": "dev-master",
+        "phing/phing": "^2.16",
+        "jakub-onderka/php-var-dump-check": "^0.2.0",
+        "squizlabs/php_codesniffer": "^3.0"
     },
     "autoload": {
         "psr-0": { "BeSimple\\": "src/" }
@@ -53,5 +57,11 @@
         "branch-alias": {
             "dev-master": "0.4-dev"
         }
-    }
+    },
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/tuscanicz/phpstan.git"
+        }
+    ]
 }

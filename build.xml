@@ -1,0 +1,54 @@
+<project name="be-simple-soap" default="build">
+
+    <property environment="env"/>
+
+    <fileset id="src" dir="${project.basedir}/src">
+        <include name="**/*.php"/>
+        <exclude name="BeSimple/SoapBundle/**/*.php"/>
+        <exclude name="BeSimple/SoapCommon/Type/**/*.php"/>
+    </fileset>
+
+    <fileset id="tests" dir="${project.basedir}/tests">
+        <include name="**/*.php"/>
+    </fileset>
+
+    <target name="cleanup" description="Workspace cleanup">
+        <delete>
+            <fileset dir="${project.basedir}/cache">
+                <include name="**/*"/>
+                <exclude name=".gitkeep"/>
+            </fileset>
+        </delete>
+    </target>
+
+    <target name="prepare" depends="cleanup" description="Workspace preparation">
+        <echo>project.basedir: ${project.basedir}</echo>
+        <property name="buildOutputPath" value="${project.basedir}/cache"/>
+        <echo>buildOutputPath: ${buildOutputPath}</echo>
+    </target>
+
+    <target name="lint" depends="prepare" description="PHP Lint check">
+        <phplint haltonfailure="true" level="debug" deprecatedAsError="true" tofile="${buildOutputPath}/phplint-outfile.txt">
+            <fileset refid="src"/>
+        </phplint>
+    </target>
+
+    <target name="varDump" depends="prepare" description="Check for forgotten var_dumps">
+        <exec command="${project.basedir}/vendor/bin/var-dump-check --exclude app --exclude vendor ." passthru="true" checkreturn="true"/>
+    </target>
+
+    <target name="phpcs" depends="prepare" description="PHP_CodeSniffer checks">
+        <exec command="php vendor/squizlabs/php_codesniffer/bin/phpcs --ignore=BeSimple/SoapBundle/,BeSimple/SoapCommon/Type/ --standard=${project.basedir}/codesniffer-ruleset.xml --report=checkstyle --report-file=${buildOutputPath}/phpcs-checkstyle-outfile.xml src tests" passthru="true" checkreturn="true"/>
+    </target>
+
+    <target name="phpstan" depends="prepare" description="phpstan checks">
+        <exec command="php vendor/bin/phpstan analyse src/BeSimple/SoapClient src/BeSimple/SoapServer > cache/phpstan-output.txt" passthru="true" checkreturn="true"/>
+    </target>
+
+    <target name="phpUnitTests" description="Run unit tests">
+        <exec command="php vendor/phpunit/phpunit/phpunit --configuration=phpunit.xml --testsuite=BeSimpleSoapTestSuite" passthru="true" checkreturn="true"/>
+    </target>
+
+    <target name="build" depends="prepare, varDump, lint, phpcs, phpstan, phpUnitTests" description="Meta target"/>
+
+</project>

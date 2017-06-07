@@ -92,14 +92,14 @@ abstract class SoapMessage
     /**
      * SOAP version (SOAP_1_1|SOAP_1_2)
      *
-     * @var string
+     * @var int
      */
     protected $version;
 
     /**
     * Get content type for given SOAP version.
     *
-    * @param string $version SOAP version constant SOAP_1_1|SOAP_1_2
+    * @param int $version SOAP version constant SOAP_1_1|SOAP_1_2
     *
     * @return string
     * @throws \InvalidArgumentException
@@ -232,9 +232,9 @@ abstract class SoapMessage
     }
 
     /**
-     * Get version.
+     * Get SOAP version SOAP_1_1|SOAP_1_2
      *
-     * @return string
+     * @return int
      */
     public function getVersion()
     {
@@ -244,7 +244,7 @@ abstract class SoapMessage
     /**
      * Set version.
      *
-     * @param string $version SOAP version SOAP_1_1|SOAP_1_2
+     * @param int $version SOAP version SOAP_1_1|SOAP_1_2
      */
     public function setVersion($version)
     {

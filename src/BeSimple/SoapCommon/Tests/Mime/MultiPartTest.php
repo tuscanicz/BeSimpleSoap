@@ -131,13 +131,13 @@ class MultiPartTest extends \PHPUnit_Framework_TestCase
         $mp->addPart($p2);
 
         $withoutMain = array(
-            trim($p2->getHeader('Content-ID'),'<>') => $p2,
+            trim($p2->getHeader('Content-ID'), '<>') => $p2,
         );
         $this->assertEquals($withoutMain, $mp->getParts());
 
         $withMain = array(
-            trim($p1->getHeader('Content-ID'),'<>') => $p1,
-            trim($p2->getHeader('Content-ID'),'<>') => $p2,
+            trim($p1->getHeader('Content-ID'), '<>') => $p1,
+            trim($p2->getHeader('Content-ID'), '<>') => $p2
         );
         $this->assertEquals($withMain, $mp->getParts(true));
     }

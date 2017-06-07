@@ -94,16 +94,16 @@ class WsAddressingFilter implements SoapRequestFilter, SoapResponseFilter
     /**
      * List of reference parameters associated with this soap message.
      *
-     * @var unknown_type
+     * @var array
      */
-    protected $referenceParametersSet = array();
+    protected $referenceParametersSet;
 
     /**
      * List of reference parameters recieved with this soap message.
      *
-     * @var unknown_type
+     * @var array
      */
-    protected $referenceParametersRecieved = array();
+    protected $referenceParametersRecieved;
 
     /**
      * RelatesTo.
@@ -214,7 +214,7 @@ class WsAddressingFilter implements SoapRequestFilter, SoapResponseFilter
     public function setMessageId($messageId = null)
     {
         if (null === $messageId) {
-            $messageId = 'uuid:' . Helper::generateUUID();
+            $messageId = 'uuid:' . Helper::generateUuid();
         }
         $this->messageId = $messageId;
     }
@@ -259,7 +259,7 @@ class WsAddressingFilter implements SoapRequestFilter, SoapResponseFilter
      *
      * @return void
      */
-    public function filterRequest(CommonSoapRequest $request)
+    public function filterRequest(CommonSoapRequest $request, $attachmentType)
     {
         // get \DOMDocument from SOAP request
         $dom = $request->getContentDocument();
@@ -328,7 +328,7 @@ class WsAddressingFilter implements SoapRequestFilter, SoapResponseFilter
      *
      * @return void
      */
-    public function filterResponse(CommonSoapResponse $response)
+    public function filterResponse(CommonSoapResponse $response, $attachmentType)
     {
         // get \DOMDocument from SOAP response
         $dom = $response->getContentDocument();

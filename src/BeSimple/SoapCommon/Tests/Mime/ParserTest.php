@@ -115,7 +115,8 @@ class ParserTest extends \PHPUnit_Framework_TestCase
         $mimeMessage = file_get_contents($filename);
 
         $headers = array(
-            'Content-Type' => 'multipart/related; type="application/xop+xml";start="<http://tempuri.org/0>";boundary="uuid:0ca0e16e-feb1-426c-97d8-c4508ada5e82+id=7";start-info="application/soap+xml"',
+            'Content-Type' =>
+                'multipart/related; type="application/xop+xml";start="<http://tempuri.org/0>";boundary="uuid:0ca0e16e-feb1-426c-97d8-c4508ada5e82+id=7";start-info="application/soap+xml"',
             'Content-Length' => 1941,
             'Host' => '131.107.72.15',
             'Expect' => '100-continue',

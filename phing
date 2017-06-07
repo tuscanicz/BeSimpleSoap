@@ -1,0 +1,6 @@
+#!/usr/bin/env php
+<?php
+
+putenv("PHING_HOME=" . realpath(dirname(__FILE__)));
+
+require_once __DIR__ . '/vendor/phing/phing/bin/phing.php';

@@ -78,8 +78,8 @@ class WsdlDownloader
                     throw new Exception('Could not write WSDL cache file: empty curl response from: '.$wsdlPath);
                 }
                 if ($resolveRemoteIncludes === true) {
-                    $document = $this->getXmlFileDOMDocument($curl, $cacheType, $curlResponse->getResponseBody(), $wsdlPath);
-                    $this->saveXmlDOMDocument($document, $cacheFilePath);
+                    $document = $this->getXmlFileDomDocument($curl, $cacheType, $curlResponse->getResponseBody(), $wsdlPath);
+                    $this->saveXmlDomDocument($document, $cacheFilePath);
                 } else {
                     file_put_contents($cacheFilePath, $curlResponse->getResponseBody());
                 }
@@ -88,8 +88,8 @@ class WsdlDownloader
             }
         } else {
             if (file_exists($wsdlPath)) {
-                $document = $this->getXmlFileDOMDocument($curl, $cacheType, file_get_contents($wsdlPath));
-                $this->saveXmlDOMDocument($document, $cacheFilePath);
+                $document = $this->getXmlFileDomDocument($curl, $cacheType, file_get_contents($wsdlPath));
+                $this->saveXmlDomDocument($document, $cacheFilePath);
             } else {
                 throw new Exception('Could write WSDL cache file: local file does not exist: '.$wsdlPath);
             }
@@ -102,9 +102,9 @@ class WsdlDownloader
 
             return realpath($wsdlPath);
 
-        } else {
-            throw new Exception('Could not download WSDL: local file does not exist: '.$wsdlPath);
         }
+
+        throw new Exception('Could not download WSDL: local file does not exist: '.$wsdlPath);
     }
 
     /**
@@ -118,11 +118,9 @@ class WsdlDownloader
             if (isset($parsedUrlOrFalse['scheme']) && substr($parsedUrlOrFalse['scheme'], 0, 4) === 'http') {
 
                 return true;
-
-            } else {
-
-                return false;
             }
+
+            return false;
         }
 
         throw new Exception('Could not determine wsdlPath is remote: '.$wsdlPath);
@@ -137,7 +135,7 @@ class WsdlDownloader
      * @param boolean $parentFilePath Parent file name
      * @return DOMDocument
      */
-    private function getXmlFileDOMDocument(Curl $curl, $cacheType, $xmlFileSource, $parentFilePath = null)
+    private function getXmlFileDomDocument(Curl $curl, $cacheType, $xmlFileSource, $parentFilePath = null)
     {
         $document = new DOMDocument('1.0', 'utf-8');
         if ($document->loadXML($xmlFileSource) === false) {
@@ -151,7 +149,7 @@ class WsdlDownloader
         return $document;
     }
 
-    private function saveXmlDOMDocument(DOMDocument $document, $cacheFilePath)
+    private function saveXmlDomDocument(DOMDocument $document, $cacheFilePath)
     {
         try {
             $xmlContents = $document->saveXML();
@@ -191,7 +189,7 @@ class WsdlDownloader
                                 true
                             )
                         );
-                    } else if ($parentFilePath !== null) {
+                    } elseif ($parentFilePath !== null) {
                         $node->setAttribute(
                             $locationAttributeName,
                             $this->getWsdlPath(

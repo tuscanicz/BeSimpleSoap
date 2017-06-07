@@ -21,6 +21,7 @@ class SoapServerOptions
     private $handlerObject;
     private $keepAlive;
     private $errorReporting;
+    private $exceptions;
     private $persistence;
 
     /**
@@ -47,18 +48,20 @@ class SoapServerOptions
 
     public function getHandler()
     {
+        if ($this->hasHandlerObject() && $this->hasHandlerClass()) {
+
+            throw new Exception('Both HandlerClass and HandlerObject set: please specify only one');
+        }
         if ($this->hasHandlerObject()) {
 
             return $this->getHandlerObject();
-
-        } else if ($this->hasHandlerClass()) {
+        }
+        if ($this->hasHandlerClass()) {
 
             return $this->getHandlerClass();
-
-        } else {
-
-            throw new Exception('No HandlerClass or HandlerObject set');
         }
+
+        throw new Exception('No HandlerClass or HandlerObject set');
     }
 
     public function getHandlerInstance()
@@ -94,7 +97,7 @@ class SoapServerOptions
 
     public function hasPersistence()
     {
-        return $this->persistence !== SoapServerOptions::SOAP_SERVER_PERSISTENCE_NONE;
+        return $this->persistence !== self::SOAP_SERVER_PERSISTENCE_NONE;
     }
 
     public function getPersistence()
@@ -136,14 +139,13 @@ class SoapServerOptions
         if (is_string($handler) && class_exists($handler)) {
 
             return null;
-
-        } elseif (is_object($handler)) {
+        }
+        if (is_object($handler)) {
 
             return $handler;
-
-        } else {
-            throw new \InvalidArgumentException('The handler has to be a class name or an object');
         }
+
+        throw new \InvalidArgumentException('The handler has to be a class name or an object');
     }
 
     /**
@@ -155,13 +157,12 @@ class SoapServerOptions
         if (is_string($handler) && class_exists($handler)) {
 
             return $handler;
-
-        } elseif (is_object($handler)) {
+        }
+        if (is_object($handler)) {
 
             return null;
-
-        } else {
-            throw new \InvalidArgumentException('The handler has to be a class name or an object');
         }
+
+        throw new \InvalidArgumentException('The handler has to be a class name or an object');
     }
 }

@@ -7,7 +7,7 @@ Pre-existent Type
 +------------------------------------------------+-----------------+
 |                  Php Type                      |   Value Type    |
 +================================================+=================+
-| BeSimple\\SoapCommon\\Type\\KeyValue\\String   | String          |
+| BeSimple\\SoapCommon\\Type\\KeyValue\\StringUtility   | StringUtility          |
 +------------------------------------------------+-----------------+
 | BeSimple\\SoapCommon\\Type\\KeyValue\\Boolean  | Boolean         |
 +------------------------------------------------+-----------------+
@@ -34,7 +34,7 @@ Controller
     {
         /**
          * @Soap\Method("returnAssocArray")
-         * @Soap\Result(phpType = "BeSimple\SoapCommon\Type\KeyValue\String[]")
+         * @Soap\Result(phpType = "BeSimple\SoapCommon\Type\KeyValue\StringUtility[]")
          */
         public function assocArrayOfStringAction()
         {
@@ -46,8 +46,8 @@ Controller
 
         /**
          * @Soap\Method("sendAssocArray")
-         * @Soap\Param("assocArray", phpType = "BeSimple\SoapCommon\Type\KeyValue\String[]")
-         * @Soap\Result(phpType = "BeSimple\SoapCommon\Type\KeyValue\String[]")
+         * @Soap\Param("assocArray", phpType = "BeSimple\SoapCommon\Type\KeyValue\StringUtility[]")
+         * @Soap\Result(phpType = "BeSimple\SoapCommon\Type\KeyValue\StringUtility[]")
          */
         public function sendAssocArrayOfStringAction(array $assocArray)
         {

@@ -113,7 +113,7 @@ class ParsedPartsGetter
                         $hitFirstBoundary = true;
                         $inHeader = true;
                         $messagePartStringContent = '';
-                    } else if (MimeBoundaryAnalyser::isMessageLineLastBoundary($mimeMessageLine, $contentTypeBoundary)) {
+                    } elseif (MimeBoundaryAnalyser::isMessageLineLastBoundary($mimeMessageLine, $contentTypeBoundary)) {
                         $currentPartContent = self::decodeContent(
                             $currentPart,
                             substr($messagePartStringContent, 0, -1)
@@ -166,7 +166,7 @@ class ParsedPartsGetter
 
         if ($encoding === Part::ENCODING_BASE64) {
             $partStringContent = base64_decode($partStringContent);
-        } else if ($encoding === Part::ENCODING_QUOTED_PRINTABLE) {
+        } elseif ($encoding === Part::ENCODING_QUOTED_PRINTABLE) {
             $partStringContent = quoted_printable_decode($partStringContent);
         }
 

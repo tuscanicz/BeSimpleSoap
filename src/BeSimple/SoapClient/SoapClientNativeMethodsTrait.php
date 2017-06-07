@@ -9,6 +9,7 @@ use Exception;
 
 trait SoapClientNativeMethodsTrait
 {
+    protected $soapClientOptions;
     /** @var SoapAttachment[] */
     private $soapAttachmentsOnRequestStorage;
     /** @var SoapResponse */

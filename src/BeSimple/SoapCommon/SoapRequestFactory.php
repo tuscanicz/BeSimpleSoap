@@ -36,7 +36,7 @@ class SoapRequestFactory
      *
      * @param  string            $location       Location
      * @param  string            $action         SOAP action
-     * @param  string            $version        SOAP version
+     * @param  int               $version        SOAP version
      * @param  string            $content        Content
      * @return SoapRequest
      */

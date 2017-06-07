@@ -50,13 +50,14 @@ class CurlOptionsBuilder
                     $basicAuthentication->getPassword()
                 );
 
-            } else if ($soapClientOptions->hasAuthenticationDigest()) {
+            }
+            if ($soapClientOptions->hasAuthenticationDigest()) {
 
                 return new HttpAuthenticationDigestOptions();
 
-            } else {
-                throw new Exception('Unresolved authentication type: '.get_class($soapClientOptions->getAuthentication()));
             }
+
+            throw new Exception('Unresolved authentication type: '.get_class($soapClientOptions->getAuthentication()));
         }
 
         return null;

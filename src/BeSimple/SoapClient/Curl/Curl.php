@@ -120,7 +120,7 @@ class Curl
                 $httpAuthenticationBasic = $options->getHttpAuthentication();
                 curl_setopt($curlSession, CURLOPT_HTTPAUTH, $httpAuthenticationBasic->getAuthenticationType());
                 curl_setopt($curlSession, CURLOPT_USERPWD, $httpAuthenticationBasic->getUsername() . ':' . $httpAuthenticationBasic->getPassword());
-            } else if ($options->hasHttpAuthenticationDigest()) {
+            } elseif ($options->hasHttpAuthenticationDigest()) {
                 /** @var HttpAuthenticationDigestOptions $httpAuthenticationDigest */
                 $httpAuthenticationDigest = $options->getHttpAuthentication();
                 curl_setopt($curlSession, CURLOPT_HTTPAUTH, $httpAuthenticationDigest->getAuthenticationType());

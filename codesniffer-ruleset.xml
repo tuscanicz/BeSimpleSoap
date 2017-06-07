@@ -1,0 +1,52 @@
+<?xml version="1.0"?>
+<ruleset name="WSCBE">
+    <description>Coding standards</description>
+
+    <rule ref="Generic.Classes">
+        <exclude name="Generic.Classes.OpeningBraceSameLine.BraceOnNewLine"/>
+    </rule>
+    <rule ref="Generic.WhiteSpace.DisallowTabIndent"/>
+    <rule ref="Generic.Files">
+        <properties>
+            <property name="eolChar" value="\n"/>
+            <property name="lineLimit" value="200"/>
+            <property name="absoluteLineLimit" value="220"/>
+        </properties>
+        <exclude name="Generic.Files.LowercasedFilename.NotFound"/>
+        <exclude name="Generic.Files.EndFileNoNewline.Found"/>
+    </rule>
+    <rule ref="Generic.PHP">
+        <exclude name="Generic.PHP.UpperCaseConstant.Found"/>
+        <exclude name="Generic.PHP.ClosingPHPTag.NotFound"/>
+        <exclude name="Generic.PHP.NoSilencedErrors.Discouraged"/> <!-- unfortunately, the only way to make native SoapClient work correctly -->
+    </rule>
+    <rule ref="Generic.NamingConventions"/>
+    <rule ref="Generic.Functions">
+        <exclude name="Generic.Functions.OpeningFunctionBraceKernighanRitchie.BraceOnNewLine"/>
+        <exclude name="Generic.Functions.OpeningFunctionBraceBsdAllman.BraceOnSameLine"/>
+    </rule>
+
+    <rule ref="PSR1.Classes"/>
+    <rule ref="PSR1.Files"/>
+    <rule ref="PSR1.Methods"/>
+
+    <rule ref="PSR2.Classes"/>
+    <rule ref="PSR2.ControlStructures"/>
+    <rule ref="PSR2.Files"/>
+    <rule ref="PSR2.Methods"/>
+    <rule ref="PSR2.Namespaces"/>
+
+    <rule ref="Squiz.Classes">
+        <exclude name="Squiz.Classes.ClassDeclaration.EndFileAfterCloseBrace"/>
+    </rule>
+    <rule ref="Squiz.Functions">
+        <exclude name="Squiz.Functions.FunctionDeclarationArgumentSpacing.SpaceAfterDefault"/>
+        <exclude name="Squiz.Functions.FunctionDeclarationArgumentSpacing.SpaceBeforeEquals"/>
+    </rule>
+    <!--<rule ref="Squiz.PHP"/>-->
+    <rule ref="Squiz.Objects">
+        <exclude name="Squiz.Objects.ObjectInstantiation.NotAssigned"/>
+    </rule>
+    <rule ref="Squiz.Scope"/>
+
+</ruleset>

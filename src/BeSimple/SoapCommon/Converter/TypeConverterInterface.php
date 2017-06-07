@@ -24,14 +24,14 @@ interface TypeConverterInterface
      *
      * @return string
      */
-    function getTypeNamespace();
+    public function getTypeNamespace();
 
     /**
      * Get type name.
      *
      * @return string
      */
-    function getTypeName();
+    public function getTypeName();
 
     /**
      * Convert given XML string to PHP type.
@@ -40,7 +40,7 @@ interface TypeConverterInterface
      *
      * @return mixed
      */
-    function convertXmlToPhp($data);
+    public function convertXmlToPhp($data);
 
     /**
      * Convert PHP type to XML string.
@@ -49,5 +49,5 @@ interface TypeConverterInterface
      *
      * @return string
      */
-    function convertPhpToXml($data);
+    public function convertPhpToXml($data);
 }

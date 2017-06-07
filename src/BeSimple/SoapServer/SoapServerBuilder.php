@@ -14,6 +14,7 @@ namespace BeSimple\SoapServer;
 
 use BeSimple\SoapCommon\SoapOptions\SoapOptions;
 use BeSimple\SoapServer\SoapOptions\SoapServerOptions;
+use Exception;
 
 /**
  * SoapServerBuilder provides a SoapServer instance from SoapServerOptions and SoapOptions.
@@ -40,8 +41,15 @@ class SoapServerBuilder
         }
         if ($soapServerOptions->hasHandlerClass()) {
             $server->setClass($soapServerOptions->getHandlerClass());
-        } else if ($soapServerOptions->hasHandlerObject()) {
+        }
+        if ($soapServerOptions->hasHandlerObject()) {
             $server->setObject($soapServerOptions->getHandlerObject());
+        }
+        if ($soapServerOptions->hasHandlerClass() && $soapServerOptions->hasHandlerObject()) {
+
+            throw new Exception(
+                'Could not create SoapServer: HandlerClass and HandlerObject are set: please specify only one'
+            );
         }
 
         return $server;
