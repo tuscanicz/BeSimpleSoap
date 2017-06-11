@@ -16,7 +16,6 @@ use BeSimple\SoapCommon\Mime\Boundary\MimeBoundaryAnalyser;
 use BeSimple\SoapCommon\Mime\Parser\ContentTypeParser;
 use BeSimple\SoapCommon\Mime\Parser\ParsedPartList;
 use BeSimple\SoapCommon\Mime\Parser\ParsedPartsGetter;
-use Exception;
 
 /**
  * Simple Multipart-Mime parser.
@@ -48,12 +47,14 @@ class Parser
         }
         if (MimeBoundaryAnalyser::hasMessageBoundary($mimeMessageLines) === true) {
             if ($mimeMessageLineCount <= 1) {
-                throw new Exception(
+                throw new CouldNotParseMimeMessageException(
                     sprintf(
                         'Cannot parse MultiPart message of %d characters: got unexpectable low number of lines: %s',
                         mb_strlen($mimeMessage),
                         (string)$mimeMessageLineCount
-                    )
+                    ),
+                    $mimeMessage,
+                    $headers
                 );
             }
             $parsedPartList = ParsedPartsGetter::getPartsFromMimeMessageLines(
@@ -62,18 +63,22 @@ class Parser
                 $hasHttpRequestHeaders
             );
             if ($parsedPartList->hasParts() === false) {
-                throw new Exception(
-                    'Could not parse MimeMessage: no Parts for MultiPart given'
+                throw new CouldNotParseMimeMessageException(
+                    'Could not parse MimeMessage: no Parts for MultiPart given',
+                    $mimeMessage,
+                    $headers
                 );
             }
             if ($parsedPartList->hasExactlyOneMainPart() === false) {
-                throw new Exception(
+                throw new CouldNotParseMimeMessageException(
                     sprintf(
                         'Could not parse MimeMessage %s HTTP headers: unexpected count of main ParsedParts: %s (total: %d)',
                         $hasHttpRequestHeaders ? 'with' : 'w/o',
                         implode(', ', $parsedPartList->getPartContentIds()),
                         $parsedPartList->getMainPartCount()
-                    )
+                    ),
+                    $mimeMessage,
+                    $headers
                 );
             }
             self::appendPartsToMultiPart(
