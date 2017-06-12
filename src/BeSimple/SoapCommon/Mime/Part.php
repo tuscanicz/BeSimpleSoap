@@ -68,9 +68,7 @@ class Part extends PartHeader
     }
 
     /**
-     * __toString.
-     *
-     * @return mixed
+     * @return string
      */
     public function __toString()
     {
@@ -98,11 +96,7 @@ class Part extends PartHeader
     }
 
     /**
-     * Set mime content.
-     *
-     * @param mixed $content Content to set
-     *
-     * @return void
+     * @param string $content
      */
     public function setContent($content)
     {
@@ -111,7 +105,6 @@ class Part extends PartHeader
 
     /**
      * Get complete mime message of this object.
-     *
      * @return string
      */
     public function getMessagePart()
@@ -121,7 +114,6 @@ class Part extends PartHeader
 
     /**
      * Generate body.
-     *
      * @return string
      */
     protected function generateBody()

@@ -31,21 +31,17 @@ class MultiPart extends PartHeader
 {
     /**
      * Content-ID of main part.
-     *
      * @var string
      */
     protected $mainPartContentId;
 
     /**
      * Mime parts.
-     *
      * @var \BeSimple\SoapCommon\Mime\Part[]
      */
-    protected $parts = [];
+    protected $parts;
 
     /**
-     * Construct new mime object.
-     *
      * @param string $boundary
      */
     public function __construct($boundary = null)
@@ -63,7 +59,6 @@ class MultiPart extends PartHeader
      * Get mime message of this object (without headers).
      *
      * @param boolean $withHeaders Returned mime message contains headers
-     *
      * @return string
      */
     public function getMimeMessage($withHeaders = false)
@@ -77,30 +72,6 @@ class MultiPart extends PartHeader
         $message .= "\n" . '--' . $this->getHeader('Content-Type', 'boundary') . '--';
 
         return $message;
-    }
-
-    /**
-     * Get string array with MIME headers for usage in HTTP header (with CURL).
-     * Only 'Content-Type' and 'Content-Description' headers are returned.
-     *
-     * @return string[]
-     */
-    public function getHeadersForHttp()
-    {
-        $allowedHeaders = [
-            'Content-Type',
-            'Content-Description',
-        ];
-        $headers = [];
-        foreach ($this->headers as $fieldName => $value) {
-            if (in_array($fieldName, $allowedHeaders)) {
-                $fieldValue = $this->generateHeaderFieldValue($value);
-                // for http only ISO-8859-1
-                $headers[] = $fieldName . ': '. iconv('utf-8', 'ISO-8859-1//TRANSLIT', $fieldValue);
-            }
-        }
-
-        return $headers;
     }
 
     /**

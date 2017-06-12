@@ -1,0 +1,62 @@
+
+------=_Part_6_2094841787.1482231370463
+Content-type: text/xml; charset=UTF-8
+Content-transfer-Encoding: 8bit
+Content-id: <rootpart@soapui.org>
+
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:sch="http://schema.testcase">
+   <soapenv:Header>
+      <sch:SoapHeader>
+         <user>admin</user>
+      </sch:SoapHeader>
+   </soapenv:Header>
+   <soapenv:Body>
+      <sch:dummyServiceMethodWithAttachments>
+         <request>
+            <dummyAttribute>3</dummyAttribute>
+            <includeAttachments>true</includeAttachments>
+         </request>
+      </sch:dummyServiceMethodWithAttachments>
+   </soapenv:Body>
+</soapenv:Envelope>
+------=_Part_6_2094841787.1482231370463
+Content-type: text/html; charset=us-ascii; name=test-page.html
+Content-transfer-Encoding: 7bit
+Content-id: <test-page.html>
+Content-disposition: attachment; name="test-page.html"; filename="test-page.html"
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+   <title>Test file page</title>
+   <style type="text/css">
+      <!--
+      h1 {
+         font-family: Arial, Helvetica, sans-serif;
+         font-size: 11pt;
+      }
+      -->
+   </style>
+</head>
+
+<body>
+    <h1>Hello World!</h1>
+</body>
+</html>
+
+------=_Part_6_2094841787.1482231370463
+Content-type: application/x-sh; name=testscript.sh
+Content-transfer-Encoding: binary
+Content-id: <testscript.sh>
+Content-disposition: attachment; name="testscript.sh"; filename="testscript.sh"
+
+#!/bin/sh
+### ====================================================================== ###
+##                                                                          ##
+##  Test Script                                                             ##
+##                                                                          ##
+### ====================================================================== ###
+
+------=_Part_6_2094841787.1482231370463--
