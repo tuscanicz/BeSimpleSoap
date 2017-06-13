@@ -21,6 +21,16 @@
         </testsuite>
     </testsuites>
 
+    <filter>
+        <whitelist>
+            <directory>src</directory>
+            <exclude>
+                <directory>src/BeSimple/SoapBundle</directory>
+                <directory>src/BeSimple/SoapCommon/Type</directory>
+            </exclude>
+        </whitelist>
+    </filter>
+
     <logging>
         <log type="coverage-text" target="php://stdout" showUncoveredFiles="true" showOnlySummary="true"/>
         <log type="coverage-clover" target="cache/clover.xml"/>
