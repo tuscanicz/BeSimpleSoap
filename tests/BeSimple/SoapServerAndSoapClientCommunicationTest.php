@@ -3,12 +3,15 @@
 namespace BeSimple;
 
 use BeSimple\SoapBundle\Soap\SoapAttachment;
+use BeSimple\SoapClient\Curl\CurlOptions;
 use BeSimple\SoapClient\SoapClientBuilder;
 use BeSimple\SoapClient\SoapClientOptionsBuilder;
 use BeSimple\SoapClient\SoapFaultWithTracingData;
+use BeSimple\SoapClient\SoapOptions\SoapClientOptions;
 use BeSimple\SoapCommon\ClassMap;
 use BeSimple\SoapCommon\SoapOptions\SoapOptions;
 use BeSimple\SoapCommon\SoapOptionsBuilder;
+use BeSimple\SoapCommon\SoapRequest;
 use BeSimple\SoapServer\SoapServerBuilder;
 use BeSimple\SoapServer\SoapServerOptionsBuilder;
 use Fixtures\DummyService;
@@ -108,6 +111,65 @@ class SoapServerAndSoapClientCommunicationTest extends PHPUnit_Framework_TestCas
         self::assertContains('</dummyServiceReturn>', $soapResponse->getResponseContent());
         self::assertTrue($soapResponse->hasAttachments(), 'Response should contain attachments');
         self::assertCount(3, $attachments);
+        self::assertInstanceOf(
+            SoapRequest::class,
+            $soapResponse->getRequest(),
+            'SoapResponse::request must be SoapRequest for SoapClient calls with enabled tracing'
+        );
+
+        file_put_contents(self::CACHE_DIR . '/multipart-message-soap-client-response.xml', $soapResponse->getContent());
+        foreach ($soapResponse->getAttachments() as $attachment) {
+            $fileName = preg_replace('/\<|\>/', '', $attachment->getContentId());
+            file_put_contents(self::CACHE_DIR . DIRECTORY_SEPARATOR . 'attachment-client-response-' . $fileName, $attachment->getContent());
+
+            self::assertRegExp('/filename\.(docx|html|txt)/', $fileName);
+        }
+
+        self::assertEquals(
+            filesize(self::LARGE_SWA_FILE),
+            filesize(self::CACHE_DIR.'/attachment-client-response-filename.docx'),
+            'File cannot differ after transport from SoapClient to SoapServer'
+        );
+    }
+
+    public function testSoapCallSwaWithLargeSwaResponseAndTracingOff()
+    {
+        $soapClient = $this->getSoapBuilder()->buildWithSoapHeader(
+            new SoapClientOptions(
+                SoapClientOptions::SOAP_CLIENT_TRACE_OFF,
+                SoapClientOptions::SOAP_CLIENT_EXCEPTIONS_ON,
+                CurlOptions::DEFAULT_USER_AGENT,
+                SoapClientOptions::SOAP_CLIENT_COMPRESSION_NONE,
+                SoapClientOptions::SOAP_CLIENT_AUTHENTICATION_NONE,
+                SoapClientOptions::SOAP_CLIENT_PROXY_NONE,
+                self::TEST_HTTP_URL.'/SwaSenderEndpoint.php'
+            ),
+            SoapOptionsBuilder::createSwaWithClassMap(
+                self::TEST_HTTP_URL.'/SwaSenderEndpoint.php?wsdl',
+                new ClassMap([
+                    'GenerateTestRequest' => GenerateTestRequest::class,
+                ]),
+                SoapOptions::SOAP_CACHE_TYPE_NONE
+            ),
+            new SoapHeader('http://schema.testcase', 'SoapHeader', [
+                'user' => 'admin',
+            ])
+        );
+
+        $request = new DummyServiceMethodWithOutgoingLargeSwaRequest();
+        $request->dummyAttribute = 1;
+
+        $soapResponse = $soapClient->soapCall('dummyServiceMethodWithOutgoingLargeSwa', [$request]);
+        $attachments = $soapResponse->getAttachments();
+
+        self::assertContains('</dummyServiceReturn>', $soapResponse->getResponseContent());
+        self::assertTrue($soapResponse->hasAttachments(), 'Response should contain attachments');
+        self::assertCount(3, $attachments);
+        self::assertInstanceOf(
+            SoapRequest::class,
+            $soapResponse->getRequest(),
+            'SoapResponse::request must be SoapRequest for SoapClient calls with disabled tracing'
+        );
 
         file_put_contents(self::CACHE_DIR . '/multipart-message-soap-client-response.xml', $soapResponse->getContent());
         foreach ($soapResponse->getAttachments() as $attachment) {
@@ -164,6 +226,7 @@ class SoapServerAndSoapClientCommunicationTest extends PHPUnit_Framework_TestCas
             self::assertContains('</dummyServiceReturn>', $soapResponse->getResponseContent());
             self::assertTrue($soapResponse->getRequest()->hasAttachments(), 'Response MUST contain attachments');
             self::assertFalse($soapResponse->hasAttachments(), 'Response MUST NOT contain attachments');
+            self::assertInstanceOf(SoapRequest::class, $soapResponse->getRequest());
 
             foreach ($soapResponse->getRequest()->getAttachments() as $attachment) {
                 file_put_contents(self::CACHE_DIR . '/attachment-client-request-'.trim($attachment->getContentId(), '<>'), $attachment->getContent());

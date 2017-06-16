@@ -28,7 +28,7 @@ class SoapClientOptionsBuilder
     public static function createWithDefaults()
     {
         return new SoapClientOptions(
-            SoapClientOptions::SOAP_CLIENT_TRACE_OFF,
+            SoapClientOptions::SOAP_CLIENT_TRACE_ON,
             SoapClientOptions::SOAP_CLIENT_EXCEPTIONS_ON,
             CurlOptions::DEFAULT_USER_AGENT,
             SoapClientOptions::SOAP_CLIENT_COMPRESSION_NONE

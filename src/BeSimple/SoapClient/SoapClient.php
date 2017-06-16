@@ -95,7 +95,7 @@ class SoapClient extends \SoapClient
 
         } catch (SoapFault $soapFault) {
             if (SoapFaultSourceGetter::isNativeSoapFault($soapFault)) {
-                $soapFault = $this->decorateNativeSoapFault($soapFault);
+                $soapFault = $this->decorateNativeSoapFaultWithSoapResponseTracingData($soapFault);
             }
 
             throw $soapFault;
@@ -257,6 +257,23 @@ class SoapClient extends \SoapClient
         return $loadedWsdlFilePath;
     }
 
+    private function getHttpHeadersBySoapVersion(SoapRequest $soapRequest)
+    {
+        if ($soapRequest->getVersion() === SOAP_1_1) {
+
+            return [
+                'Content-Type: ' . $soapRequest->getContentType(),
+                'SOAPAction: "' . $soapRequest->getAction() . '"',
+                'Connection: ' . ($this->soapOptions->isConnectionKeepAlive() ? 'Keep-Alive' : 'close'),
+            ];
+        }
+
+        return [
+            'Content-Type: ' . $soapRequest->getContentType() . '; action="' . $soapRequest->getAction() . '"',
+            'Connection: ' . ($this->soapOptions->isConnectionKeepAlive() ? 'Keep-Alive' : 'close'),
+        ];
+    }
+
     private function getAttachmentFilters()
     {
         $filters = [];
@@ -277,7 +294,6 @@ class SoapClient extends \SoapClient
         array $soapAttachments = []
     ) {
         if ($this->soapClientOptions->getTrace() === true) {
-
             return SoapResponseFactory::createWithTracingData(
                 $soapRequest,
                 $curlResponse->getResponseBody(),
@@ -288,10 +304,8 @@ class SoapClient extends \SoapClient
         }
 
         return SoapResponseFactory::create(
+            $soapRequest,
             $curlResponse->getResponseBody(),
-            $soapRequest->getLocation(),
-            $soapRequest->getAction(),
-            $soapRequest->getVersion(),
             $curlResponse->getHttpResponseContentType(),
             $soapAttachments
         );
@@ -320,68 +334,43 @@ class SoapClient extends \SoapClient
         );
     }
 
-    private function decorateNativeSoapFault(SoapFault $nativePhpSoapFault)
+    private function decorateNativeSoapFaultWithSoapResponseTracingData(SoapFault $nativePhpSoapFault)
     {
-        $soapResponse = $this->getSoapResponseFromStorage();
-        if ($soapResponse instanceof SoapResponse) {
-            $soapFault = $this->throwSoapFaultByTracing(
-                SoapFaultPrefixEnum::PREFIX_PHP . '-' . $nativePhpSoapFault->getCode(),
-                $nativePhpSoapFault->getMessage(),
-                $this->getSoapResponseTracingDataFromNativeSoapFault(
-                    $nativePhpSoapFault,
-                    new SoapResponseTracingData(
-                        'Content-Type: '.$soapResponse->getRequest()->getContentType(),
-                        $soapResponse->getRequest()->getContent(),
-                        'Content-Type: '.$soapResponse->getContentType(),
-                        $soapResponse->getResponseContent()
-                    )
-                )
-            );
-        } else {
-            $soapFault = $this->throwSoapFaultByTracing(
-                $nativePhpSoapFault->faultcode,
-                $nativePhpSoapFault->getMessage(),
-                $this->getSoapResponseTracingDataFromNativeSoapFault(
-                    $nativePhpSoapFault,
-                    new SoapResponseTracingData(
-                        null,
-                        null,
-                        null,
-                        null
-                    )
-                )
-            );
-        }
-
-        return $soapFault;
+        return $this->throwSoapFaultByTracing(
+            $nativePhpSoapFault->faultcode,
+            $nativePhpSoapFault->getMessage(),
+            $this->getSoapResponseTracingDataFromNativeSoapFaultOrStorage($nativePhpSoapFault)
+        );
     }
 
-    private function getSoapResponseTracingDataFromNativeSoapFault(
-        SoapFault $nativePhpSoapFault,
-        SoapResponseTracingData $defaultSoapFaultTracingData
-    ) {
+    private function getSoapResponseTracingDataFromNativeSoapFaultOrStorage(SoapFault $nativePhpSoapFault)
+    {
         if ($nativePhpSoapFault instanceof SoapFaultWithTracingData) {
-
             return $nativePhpSoapFault->getSoapResponseTracingData();
         }
 
-        return $defaultSoapFaultTracingData;
+        return $this->getSoapResponseTracingDataFromRequestStorage();
     }
 
-    private function getHttpHeadersBySoapVersion(SoapRequest $soapRequest)
+    private function getSoapResponseTracingDataFromRequestStorage()
     {
-        if ($soapRequest->getVersion() === SOAP_1_1) {
+        $lastResponseHeaders = $lastResponse = $lastRequestHeaders = $lastRequest = null;
+        $soapResponse = $this->getSoapResponseFromStorage();
+        if ($soapResponse instanceof SoapResponse) {
+            $lastResponseHeaders = 'Content-Type: ' . $soapResponse->getContentType();
+            $lastResponse = $soapResponse->getResponseContent();
 
-            return [
-                'Content-Type: ' . $soapRequest->getContentType(),
-                'SOAPAction: "' . $soapRequest->getAction() . '"',
-                'Connection: ' . ($this->soapOptions->isConnectionKeepAlive() ? 'Keep-Alive' : 'close'),
-            ];
+            if ($soapResponse->hasRequest() === true) {
+                $lastRequestHeaders = 'Content-Type: ' . $soapResponse->getRequest()->getContentType();
+                $lastRequest = $soapResponse->getRequest()->getContent();
+            }
         }
 
-        return [
-            'Content-Type: ' . $soapRequest->getContentType() . '; action="' . $soapRequest->getAction() . '"',
-            'Connection: ' . ($this->soapOptions->isConnectionKeepAlive() ? 'Keep-Alive' : 'close'),
-        ];
+        return new SoapResponseTracingData(
+            $lastRequestHeaders,
+            $lastRequest,
+            $lastResponseHeaders,
+            $lastResponse
+        );
     }
 }

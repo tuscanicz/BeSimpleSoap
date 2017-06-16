@@ -27,27 +27,24 @@ class SoapResponseFactory
     /**
      * Factory method for SoapClient\SoapResponse.
      *
+     * @param SoapRequest               $soapRequest    related request object
      * @param string                    $content        Content
-     * @param string                    $location       Location
-     * @param string                    $action         SOAP action
-     * @param string                    $version        SOAP version
      * @param string                    $contentType    Content type header
      * @param SoapAttachment[]          $attachments    SOAP attachments
      * @return SoapResponse
      */
     public static function create(
+        SoapRequest $soapRequest,
         $content,
-        $location,
-        $action,
-        $version,
         $contentType,
         array $attachments = []
     ) {
         $response = new SoapResponse();
+        $response->setRequest($soapRequest);
         $response->setContent($content);
-        $response->setLocation($location);
-        $response->setAction($action);
-        $response->setVersion($version);
+        $response->setLocation($soapRequest->getLocation());
+        $response->setAction($soapRequest->getAction());
+        $response->setVersion($soapRequest->getVersion());
         $response->setContentType($contentType);
         if (count($attachments) > 0) {
             $response->setAttachments(
@@ -82,9 +79,7 @@ class SoapResponseFactory
         $response->setAction($soapRequest->getAction());
         $response->setVersion($soapRequest->getVersion());
         $response->setContentType($contentType);
-        if ($tracingData !== null) {
-            $response->setTracingData($tracingData);
-        }
+        $response->setTracingData($tracingData);
         if (count($attachments) > 0) {
             $response->setAttachments(
                 PartFactory::createAttachmentParts($attachments)

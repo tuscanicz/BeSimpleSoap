@@ -44,6 +44,11 @@ class SoapResponse extends CommonSoapResponse
         $this->tracingData = $tracingData;
     }
 
+    public function hasRequest()
+    {
+        return $this->request !== null;
+    }
+
     public function setRequest(SoapRequest $request)
     {
         $this->request = $request;

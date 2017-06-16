@@ -2,9 +2,11 @@
 
 namespace BeSimple;
 
+use BeSimple\SoapClient\Curl\CurlOptions;
 use BeSimple\SoapClient\SoapClientBuilder;
 use BeSimple\SoapClient\SoapClientOptionsBuilder;
 use BeSimple\SoapClient\SoapFaultWithTracingData;
+use BeSimple\SoapClient\SoapOptions\SoapClientOptions;
 use BeSimple\SoapCommon\ClassMap;
 use BeSimple\SoapCommon\SoapOptions\SoapOptions;
 use BeSimple\SoapCommon\SoapOptionsBuilder;
@@ -34,6 +36,55 @@ class SoapServerAndSoapClientCommunicationSoapFaultsTest extends PHPUnit_Framewo
         pclose($this->localWebServerProcess);
     }
 
+    public function testSoapCallSwaWithLargeSwaResponseWithSoapFaultAndTracingOff()
+    {
+        $soapClient = $this->getSoapClientBuilder()->buildWithSoapHeader(
+            new SoapClientOptions(
+                SoapClientOptions::SOAP_CLIENT_TRACE_OFF,
+                SoapClientOptions::SOAP_CLIENT_EXCEPTIONS_ON,
+                CurlOptions::DEFAULT_USER_AGENT,
+                SoapClientOptions::SOAP_CLIENT_COMPRESSION_NONE,
+                SoapClientOptions::SOAP_CLIENT_AUTHENTICATION_NONE,
+                SoapClientOptions::SOAP_CLIENT_PROXY_NONE,
+                self::TEST_HTTP_URL.'/SwaSenderSoapFaultEndpoint.php'
+            ),
+            SoapOptionsBuilder::createSwaWithClassMap(
+                self::TEST_HTTP_URL.'/SwaSenderEndpoint.php?wsdl',
+                new ClassMap([
+                    'GenerateTestRequest' => GenerateTestRequest::class,
+                ]),
+                SoapOptions::SOAP_CACHE_TYPE_NONE
+            ),
+            new SoapHeader('http://schema.testcase', 'SoapHeader', [
+                'user' => 'admin',
+            ])
+        );
+
+        $this->setExpectedException(SoapFault::class);
+
+        try {
+            $soapClient->soapCall('dummyServiceMethodWithOutgoingLargeSwa', []);
+        } catch (SoapFault $e) {
+            self::assertNotInstanceOf(
+                SoapFaultWithTracingData::class,
+                $e,
+                'SoapClient must not return tracing data when SoapClientOptions::trace is off.'
+            );
+            self::assertEquals(
+                '911',
+                $e->faultcode
+            );
+            self::assertContains(
+                'with HTTP response code 500 with Message: This is a dummy SoapFault. and Code: 911',
+                $e->getMessage()
+            );
+
+            throw $e;
+        }
+
+        self::fail('Expected SoapFault was not thrown');
+    }
+
     public function testSoapCallSwaWithLargeSwaResponseWithSoapFault()
     {
         $soapClient = $this->getSoapClientBuilder()->buildWithSoapHeader(
@@ -59,7 +110,8 @@ class SoapServerAndSoapClientCommunicationSoapFaultsTest extends PHPUnit_Framewo
         } catch (SoapFault $e) {
             self::assertInstanceOf(
                 SoapFaultWithTracingData::class,
-                $e
+                $e,
+                'SoapClient must return tracing data when SoapClientOptions::trace is on.'
             );
             /** @var SoapFaultWithTracingData $e */
             self::assertEquals(
