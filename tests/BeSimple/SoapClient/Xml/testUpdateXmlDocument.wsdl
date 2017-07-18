@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wsdl:definitions
+		xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+		xmlns:http="http://schemas.xmlsoap.org/wsdl/http/"
+		xmlns:ns="http://location.ltd/namespace1"
+		xmlns:ns2="http://location.ltd/namespace2"
+		xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+		xmlns:tns="http://endpoint-location.tld:7654/ws"
+		xmlns:xs="http://www.w3.org/2001/XMLSchema" name="PushServerWSDL"
+		targetNamespace="http://location.ltd/target-namespace">
+	<wsdl:types>
+		<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" targetNamespace="http://location.ltd/namespace1">
+		    <xs:include schemaLocation="../Schemas/Common/Document1.xsd"/>
+		</xs:schema>
+		<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" targetNamespace="http://location.ltd/namespace2">
+		    <xs:include schemaLocation="../Schemas/Common/Document2.xsd"/>
+		</xs:schema>
+	</wsdl:types>
+	<wsdl:message name="ServerHeader">
+		<wsdl:part element="ns:serverHeader" name="serverHeader"/>
+	</wsdl:message>
+
+	<wsdl:portType name="Server">
+		<wsdl:operation name="SendPushMessage">
+			<wsdl:documentation>TEST-OPERATION-1</wsdl:documentation>
+			<wsdl:input message="tns:SendPushMessageRequest" name="SendPushMessageRequest"/>
+			<wsdl:output message="tns:SendPushMessageResponse" name="SendPushMessageResponse"/>
+			<wsdl:fault message="tns:SystemFault" name="systemFault"/>
+		</wsdl:operation>
+	</wsdl:portType>
+	<wsdl:binding name="ServerBinding" type="tns:Server">
+		<soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+		<wsdl:operation name="DummyMethod">
+			<soap:operation soapAction="http://endpoint-location.tld:7654/ep/v1" style="document"/>
+			<wsdl:input name="DummyMethodRequest">
+				<soap:body use="literal"/>
+			</wsdl:input>
+			<wsdl:output name="DummyMethodResponse">
+				<soap:body use="literal"/>
+			</wsdl:output>
+			<wsdl:fault name="soapServerFault">
+				<soap:fault name="soapServerFault" use="literal"/>
+			</wsdl:fault>
+		</wsdl:operation>
+	</wsdl:binding>
+	<wsdl:service name="ServerServices">
+		<wsdl:port binding="tns:ServerBinding" name="ServerServicesEndpoint">
+			<soap:address location="http://endpoint-location.tld:7654/ws/"/>
+		</wsdl:port>
+	</wsdl:service>
+</wsdl:definitions>
