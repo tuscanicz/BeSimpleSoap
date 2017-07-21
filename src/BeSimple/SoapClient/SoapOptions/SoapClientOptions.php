@@ -19,6 +19,9 @@ class SoapClientOptions
     const SOAP_CLIENT_COMPRESSION_DEFLATE = CurlOptions::SOAP_COMPRESSION_DEFLATE;
     const SOAP_CLIENT_AUTHENTICATION_NONE = null;
     const SOAP_CLIENT_PROXY_NONE = null;
+    const SOAP_CLIENT_ENDPOINT_LOCATION_NONE = null;
+    const SOAP_CLIENT_RESOLVE_REMOTE_INCLUDES_ON = true;
+    const SOAP_CLIENT_RESOLVE_REMOTE_INCLUDES_OFF = false;
 
     private $trace;
     private $exceptions;
@@ -27,15 +30,17 @@ class SoapClientOptions
     private $authentication;
     private $proxy;
     private $location;
+    private $resolveRemoteIncludes;
 
     /**
-     * @param bool $trace = SoapClientOptions::SOAP_CLIENT_TRACE_ON|SoapClientOptions::SOAP_CLIENT_TRACE_OFF
-     * @param bool $exceptions = SoapClientOptions::SOAP_CLIENT_EXCEPTIONS_ON|SoapClientOptions::SOAP_CLIENT_EXCEPTIONS_OFF
+     * @param bool $trace = self::SOAP_CLIENT_TRACE_ON|self::SOAP_CLIENT_TRACE_OFF
+     * @param bool $exceptions = self::SOAP_CLIENT_EXCEPTIONS_ON|self::SOAP_CLIENT_EXCEPTIONS_OFF
      * @param string $userAgent
-     * @param int|null $compression = SoapClientOptions::SOAP_CLIENT_COMPRESSION_NONE|SoapClientOptions::SOAP_CLIENT_COMPRESSION_GZIP|SoapClientOptions::SOAP_CLIENT_COMPRESSION_DEFLATE
+     * @param int|null $compression = self::SOAP_CLIENT_COMPRESSION_NONE|self::SOAP_CLIENT_COMPRESSION_GZIP|self::SOAP_CLIENT_COMPRESSION_DEFLATE
      * @param SoapServerAuthenticationInterface|null $authentication
      * @param SoapServerProxy|null $proxy
      * @param string|null $location
+     * @param bool $resolveRemoteIncludes = self::SOAP_CLIENT_RESOLVE_REMOTE_INCLUDES_ON|self::SOAP_CLIENT_RESOLVE_REMOTE_INCLUDES_OFF
      */
     public function __construct(
         $trace,
@@ -44,7 +49,8 @@ class SoapClientOptions
         $compression = null,
         SoapServerAuthenticationInterface $authentication = null,
         SoapServerProxy $proxy = null,
-        $location = null
+        $location = null,
+        $resolveRemoteIncludes = false
     ) {
         $this->trace = $trace;
         $this->exceptions = $exceptions;
@@ -53,6 +59,7 @@ class SoapClientOptions
         $this->authentication = $authentication;
         $this->proxy = $proxy;
         $this->location = $location;
+        $this->resolveRemoteIncludes = $resolveRemoteIncludes;
     }
 
     public function getTrace()
@@ -118,6 +125,11 @@ class SoapClientOptions
     public function getLocation()
     {
         return $this->location;
+    }
+
+    public function isResolveRemoteIncludes()
+    {
+        return $this->resolveRemoteIncludes;
     }
 
     public function toArray()

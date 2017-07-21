@@ -61,7 +61,7 @@ class SoapClient extends \SoapClient
                 $this->curl,
                 $soapOptions->getWsdlFile(),
                 $soapOptions->getWsdlCacheType(),
-                false
+                $soapClientOptions->isResolveRemoteIncludes()
             );
         } catch (Exception $e) {
             throw new SoapFault(
