@@ -81,4 +81,25 @@ class SoapClientOptionsBuilder
             $endpointLocation
         );
     }
+
+    /**
+     * @param SoapServerAuthenticationInterface $authentication
+     * @param bool $resolveRemoteIncludes
+     * @return SoapClientOptions
+     */
+    public static function createWithAuthenticationAndResolveRemoteIncludes(
+        SoapServerAuthenticationInterface $authentication,
+        $resolveRemoteIncludes
+    ) {
+        return new SoapClientOptions(
+            SoapClientOptions::SOAP_CLIENT_TRACE_ON,
+            SoapClientOptions::SOAP_CLIENT_EXCEPTIONS_ON,
+            CurlOptions::DEFAULT_USER_AGENT,
+            SoapClientOptions::SOAP_CLIENT_COMPRESSION_NONE,
+            $authentication,
+            SoapClientOptions::SOAP_CLIENT_PROXY_NONE,
+            SoapClientOptions::SOAP_CLIENT_ENDPOINT_LOCATION_NONE,
+            $resolveRemoteIncludes
+        );
+    }
 }
