@@ -31,6 +31,11 @@ class RelativePathResolverTest extends PHPUnit_Framework_TestCase
     {
         return [
             [
+                'http://anyendpoint.tld:9999/path/to/endpoint.wsdl',
+                '../Schemas/Common/SoapHeader.xsd',
+                'http://anyendpoint.tld:9999/path/Schemas/Common/SoapHeader.xsd',
+            ],
+            [
                 'http://endpoint-location.ltd/',
                 'Document1.xsd',
                 'http://endpoint-location.ltd/Document1.xsd',

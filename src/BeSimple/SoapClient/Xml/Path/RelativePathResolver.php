@@ -19,16 +19,16 @@ class RelativePathResolver
     public function resolveRelativePathInUrl($base, $relative)
     {
         $urlParts = parse_url($base);
-        $isRelativePathAbsolute = 0 === strpos($relative, '/') || 0 === strpos($relative, '..');
+        $pathIsSet = true === isset($urlParts['path']);
 
         // combine base path with relative path
-        if (isset($urlParts['path']) && mb_strlen($relative) > 0 && $isRelativePathAbsolute) {
+        if (true === $pathIsSet && 0 < mb_strlen($relative) && 0 === strpos($relative, '/')) {
             // $relative is absolute path from domain (starts with /)
             $path = $relative;
-        } elseif (isset($urlParts['path']) && strrpos($urlParts['path'], '/') === (strlen($urlParts['path']) )) {
+        } elseif (true === $pathIsSet && strrpos($urlParts['path'], '/') === strlen($urlParts['path'])) {
             // base path is directory
             $path = $urlParts['path'].$relative;
-        } elseif (isset($urlParts['path'])) {
+        } elseif (true === $pathIsSet) {
             // strip filename from base path
             $path = substr($urlParts['path'], 0, strrpos($urlParts['path'], '/')).'/'.$relative;
         } else {
