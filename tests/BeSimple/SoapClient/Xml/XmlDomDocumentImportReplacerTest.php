@@ -97,8 +97,17 @@ class XmlDomDocumentImportReplacerTest extends PHPUnit_Framework_TestCase
                 Helper::PFX_XML_SCHEMA,
                 Helper::NS_XML_SCHEMA,
                 'schemaLocation',
-                'http://endpoint-location.ltd:8080/endpoint/',
+                'http://endpoint-location.ltd:8080/endpoint/wsdl.wsdl',
                 '<xs:include schemaLocation="http://endpoint-location.ltd:8080/Schemas/Common/Document1.xsd"></xs:include>'
+            ],
+            'schemaWithParentPathAndSubDir' => [
+                file_get_contents(__DIR__.'/testUpdateXmlDocument.wsdl'),
+                new Curl(CurlOptionsBuilder::buildDefault()),
+                Helper::PFX_XML_SCHEMA,
+                Helper::NS_XML_SCHEMA,
+                'schemaLocation',
+                'http://endpoint-location.ltd:8080/endpoint/subdir/wsdl.wsdl',
+                '<xs:include schemaLocation="http://endpoint-location.ltd:8080/endpoint/Schemas/Common/Document1.xsd"></xs:include>'
             ],
         ];
     }
