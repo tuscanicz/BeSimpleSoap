@@ -27,7 +27,7 @@ class MimeBoundaryAnalyser
      */
     public static function isMessageLineBoundary($mimeMessageLine)
     {
-        return strlen($mimeMessageLine) > 0 && $mimeMessageLine[0] === "-";
+        return preg_match('/^--[0-9A-Za-z\s\'\/\+\_\,\-\.\:\=\?]+/', $mimeMessageLine) === 1;
     }
 
     /**
