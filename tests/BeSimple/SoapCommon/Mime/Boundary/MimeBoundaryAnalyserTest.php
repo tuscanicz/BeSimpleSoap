@@ -67,6 +67,8 @@ class MimeBoundaryAnalyserTest extends PHPUnit_Framework_TestCase
     {
         return [
             ['-- this line is boundary', self::EXPECTED_IS_BOUNDARY],
+            ['--this line is boundary', self::EXPECTED_IS_BOUNDARY],
+            ['--@ this line is not boundary', self::EXPECTED_IS_NOT_BOUNDARY],
             ['-- this line is also a boundary --', self::EXPECTED_IS_BOUNDARY],
             ['mesage line -- is not boundary', self::EXPECTED_IS_NOT_BOUNDARY],
             [' -- mesage line -- is not boundary', self::EXPECTED_IS_NOT_BOUNDARY],
