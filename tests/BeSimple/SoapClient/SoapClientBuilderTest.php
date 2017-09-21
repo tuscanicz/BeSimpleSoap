@@ -4,6 +4,7 @@ namespace BeSimple\SoapClient;
 
 use BeSimple\SoapClient\Curl\CurlOptions;
 use BeSimple\SoapClient\SoapOptions\SoapClientOptions;
+use BeSimple\SoapClient\SoapServerAuthentication\SoapServerAuthenticationBasic;
 use BeSimple\SoapCommon\ClassMap;
 use BeSimple\SoapCommon\SoapOptions\SoapOptions;
 use BeSimple\SoapCommon\SoapOptionsBuilder;
@@ -81,6 +82,27 @@ class SoapClientBuilderTest extends PHPUnit_Framework_TestCase
 
         $soapClient = $this->getSoapBuilder()->build(
             SoapClientOptionsBuilder::createWithDefaults(),
+            $soapOptions
+        );
+
+        self::assertInstanceOf(SoapClient::class, $soapClient);
+    }
+
+    public function testCreateOptionsWithAuthenticationAndEndpointLocationAndSslVersionV3()
+    {
+        $authentication = new SoapServerAuthenticationBasic('', '');
+        $soapClientOptions = SoapClientOptionsBuilder::createWithAuthenticationAndEndpointLocationAndSslVersionV3('', $authentication);
+
+        self::assertSame(CURL_SSLVERSION_SSLv3, $soapClientOptions->getSslVersion());
+    }
+
+    public function testConstructSoapClientWithAuthenticationAndEndpointLocationAndSslVersionV3()
+    {
+        $authentication = new SoapServerAuthenticationBasic('', '');
+        $soapOptions = SoapOptionsBuilder::createWithDefaults(self::TEST_LOCAL_WSDL_UK);
+
+        $soapClient = $this->getSoapBuilder()->build(
+            SoapClientOptionsBuilder::createWithAuthenticationAndEndpointLocationAndSslVersionV3('', $authentication),
             $soapOptions
         );
 

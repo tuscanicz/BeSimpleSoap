@@ -4,7 +4,6 @@ namespace BeSimple\SoapClient\Curl;
 
 use BeSimple\SoapClient\Curl\Http\HttpAuthenticationBasicOptions;
 use BeSimple\SoapClient\Curl\Http\HttpAuthenticationDigestOptions;
-use BeSimple\SoapClient\Curl\Http\SslCertificateOptions;
 use Exception;
 
 class Curl
@@ -141,6 +140,11 @@ class Curl
                 curl_setopt($curlSession, CURLOPT_CAPATH, $sslCertificateOptions->hasCertificateAuthorityPath());
             }
         }
+
+        if ($options->hasSslVersion()) {
+            curl_setopt($curlSession, CURLOPT_SSLVERSION, $options->getSslVersion());
+        }
+
         $executeSoapCallResponse = $this->executeHttpCall($curlSession, $options);
 
         $httpRequestHeadersAsString = curl_getinfo($curlSession, CURLINFO_HEADER_OUT);
@@ -159,7 +163,7 @@ class Curl
             $httpResponseCode
         );
 
-        if (!is_integer($httpResponseCode) || $httpResponseCode >= 400 || $httpResponseCode === 0) {
+        if (!is_int($httpResponseCode) || $httpResponseCode >= 400 || $httpResponseCode === 0) {
 
             return new CurlResponse(
                 $this->normalizeStringOrFalse($httpRequestHeadersAsString),

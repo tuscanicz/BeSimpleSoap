@@ -34,7 +34,8 @@ class CurlOptionsBuilder
             self::DEFAULT_CONNECTION_TIMEOUT,
             $soapClientOptions->getProxy(),
             self::getHttpAuthOptions($soapClientOptions),
-            self::getSslCertificateOptions($soapClientOptions)
+            self::getSslCertificateOptions($soapClientOptions),
+            $soapClientOptions->getSslVersion()
         );
     }
 

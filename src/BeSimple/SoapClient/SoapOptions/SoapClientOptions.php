@@ -31,6 +31,7 @@ class SoapClientOptions
     private $proxy;
     private $location;
     private $resolveRemoteIncludes;
+    private $sslVersion;
 
     /**
      * @param bool $trace = self::SOAP_CLIENT_TRACE_ON|self::SOAP_CLIENT_TRACE_OFF
@@ -41,6 +42,7 @@ class SoapClientOptions
      * @param SoapServerProxy|null $proxy
      * @param string|null $location
      * @param bool $resolveRemoteIncludes = self::SOAP_CLIENT_RESOLVE_REMOTE_INCLUDES_ON|self::SOAP_CLIENT_RESOLVE_REMOTE_INCLUDES_OFF
+     * @param int $sslVersion
      */
     public function __construct(
         $trace,
@@ -50,7 +52,8 @@ class SoapClientOptions
         SoapServerAuthenticationInterface $authentication = null,
         SoapServerProxy $proxy = null,
         $location = null,
-        $resolveRemoteIncludes = false
+        $resolveRemoteIncludes = false,
+        $sslVersion = null
     ) {
         $this->trace = $trace;
         $this->exceptions = $exceptions;
@@ -60,6 +63,7 @@ class SoapClientOptions
         $this->proxy = $proxy;
         $this->location = $location;
         $this->resolveRemoteIncludes = $resolveRemoteIncludes;
+        $this->sslVersion = $sslVersion;
     }
 
     public function getTrace()
@@ -153,5 +157,10 @@ class SoapClientOptions
         }
 
         return $optionsAsArray;
+    }
+
+    public function getSslVersion()
+    {
+        return $this->sslVersion;
     }
 }
