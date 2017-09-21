@@ -2,9 +2,9 @@
 
 namespace BeSimple\SoapClient\Curl;
 
+use BeSimple\SoapClient\Curl\Http\HttpAuthenticationBasicOptions;
 use BeSimple\SoapClient\Curl\Http\HttpAuthenticationDigestOptions;
 use BeSimple\SoapClient\Curl\Http\HttpAuthenticationInterface;
-use BeSimple\SoapClient\Curl\Http\HttpAuthenticationBasicOptions;
 use BeSimple\SoapClient\Curl\Http\SslCertificateOptions;
 use BeSimple\SoapClient\SoapServerProxy\SoapServerProxy;
 
@@ -22,6 +22,7 @@ class CurlOptions
     private $proxy;
     private $httpAuthentication;
     private $sslCertificateOptions;
+    private $sslVersion;
 
     /**
      * @param string $userAgent
@@ -31,6 +32,7 @@ class CurlOptions
      * @param SoapServerProxy|null $proxy
      * @param HttpAuthenticationInterface|null $httpAuthentication
      * @param SslCertificateOptions|null $sslCertificateOptions
+     * @param int $sslVersion
      */
     public function __construct(
         $userAgent,
@@ -39,7 +41,8 @@ class CurlOptions
         $connectionTimeout,
         SoapServerProxy $proxy = null,
         HttpAuthenticationInterface $httpAuthentication = null,
-        SslCertificateOptions $sslCertificateOptions = null
+        SslCertificateOptions $sslCertificateOptions = null,
+        $sslVersion = null
     ) {
         $this->userAgent = $userAgent;
         $this->followLocationMaxRedirects = $followLocationMaxRedirects;
@@ -48,6 +51,7 @@ class CurlOptions
         $this->proxy = $proxy;
         $this->httpAuthentication = $httpAuthentication;
         $this->sslCertificateOptions = $sslCertificateOptions;
+        $this->sslVersion = $sslVersion;
     }
 
     public function getUserAgent()
@@ -122,5 +126,15 @@ class CurlOptions
         }
 
         return false;
+    }
+
+    public function hasSslVersion()
+    {
+        return $this->sslVersion !== null;
+    }
+
+    public function getSslVersion()
+    {
+        return $this->sslVersion;
     }
 }
