@@ -1,20 +1,31 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <container xmlns="http://symfony.com/schema/dic/services"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
 
     <parameters>
-        <parameter key="besimple.soap.cache.class">BeSimple\SoapBundle\Cache</parameter>
-        <parameter key="besimple.soap.cache.dir">%kernel.cache_dir%/besimple/soap</parameter>
+        <parameter key="besimple.soap.classmap.class">BeSimple\SoapCommon\ClassMap</parameter>
+        <parameter key="besimple.soap.client_options.class">BeSimple\SoapClient\SoapOptions\SoapClientOptions</parameter>
+        <parameter key="besimple.soap.client_options_builder.class">BeSimple\SoapClient\SoapClientOptionsBuilder</parameter>
+        <parameter key="besimple.soap.options.class">BeSimple\SoapCommon\SoapOptions\SoapOptions</parameter>
+        <parameter key="besimple.soap.options_builder.class">BeSimple\SoapCommon\SoapOptionsBuilder</parameter>
+        <parameter key="besimple.soap.cache.dir">%kernel.cache_dir%</parameter>
     </parameters>
 
     <services>
-        <service id="besimple.soap.cache" class="%besimple.soap.cache.class%">
-            <argument>%kernel.debug%</argument>
+        <service id="besimple.soap.client_options" class="%besimple.soap.client_options.class%" abstract="true">
+            <!-- call the static method -->
+            <factory class="%besimple.soap.client_options_builder.class%" method="createWithDefaults" />
+        </service>
+
+        <service id="besimple.soap.classmap" class="%besimple.soap.classmap.class%" abstract="true" />
+
+        <service id="besimple.soap.options" class="%besimple.soap.options.class%" abstract="true">
+            <factory class="%besimple.soap.options_builder.class%" method="createWithClassMap" />
+            <argument>%besimple.soap.cache.file%</argument>
+            <argument type="service" id="besimple.soap.classmap" />
             <argument>%besimple.soap.cache.type%</argument>
-            <argument>%besimple.soap.cache.dir%/cache</argument>
-            <argument>%besimple.soap.cache.lifetime%</argument>
-            <argument>%besimple.soap.cache.limit%</argument>
+            <argument>%besimple.soap.cache.dir%</argument>
         </service>
     </services>
 

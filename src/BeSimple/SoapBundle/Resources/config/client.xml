@@ -4,26 +4,26 @@
     xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
 
     <parameters>
-        <parameter key="besimple.soap.client.builder.class">BeSimple\SoapBundle\Soap\SoapClientBuilder</parameter>
-        <parameter key="besimple.soap.classmap.class">BeSimple\SoapCommon\Classmap</parameter>
+        <parameter key="besimple.soap.client.builder.class">BeSimple\SoapClient\SoapClientBuilder</parameter>
+        <parameter key="besimple.soap.client.class">BeSimple\SoapClient\SoapClient</parameter>
+        <parameter key="besimple.soap.client.proxy.class">BeSimple\SoapClient\SoapServerProxy\SoapServerProxy</parameter>
     </parameters>
 
     <services>
-        <service id="besimple.soap.client.builder" class="%besimple.soap.client.builder.class%" abstract="true">
-            <argument /> <!-- wsdl URI -->
-            <argument type="collection">
-                <argument key="debug">%kernel.debug%</argument>
-            </argument>
-            <argument type="service" id="besimple.soap.classmap" />
-            <argument type="service" id="besimple.soap.converter.collection" />
-            <argument type="service" id="besimple.soap.cache" /> <!-- hack to load besimple cache configuration -->
+
+        <service id="besimple.soap.client" class="%besimple.soap.client.class%" abstract="true">
+            <factory class="%besimple.soap.client.builder.class%" method="build" />
+            <argument type="service" id="besimple.soap.client_options" />
+            <argument type="service" id="besimple.soap.options" /> <!-- hack to load besimple cache configuration -->
         </service>
 
-        <service id="besimple.soap.client" class="%besimple.soap.client.builder.class%" abstract="true">
-            <factory class="besimple.soap.client.builder" method="build" />
+        <service id="besimple.soap.client.proxy" class="%besimple.soap.client.proxy.class%" abstract="true">
+            <argument id="$host" />
+            <argument id="$port" />
+            <argument id="$login" />
+            <argument id="$password" />
+            <argument id="$authenticationType" />
         </service>
-
-        <service id="besimple.soap.classmap" class="%besimple.soap.classmap.class%" abstract="true" />
     </services>
 
 </container>
