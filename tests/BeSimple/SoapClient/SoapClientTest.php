@@ -16,11 +16,23 @@ class SoapClientTest extends PHPUnit_Framework_TestCase
 {
     const CACHE_DIR = __DIR__ . '/../../../cache';
     const FIXTURES_DIR = __DIR__ . '/../../Fixtures';
-    const TEST_HTTP_URL = 'http://localhost:9000/tests';
+    const TEST_HTTP_URL = 'http://localhost:8000/tests';
     const TEST_ENDPOINT_UK = 'http://www.webservicex.net/uklocation.asmx';
     const TEST_REMOTE_WSDL_UK = 'http://www.webservicex.net/uklocation.asmx?WSDL';
     const TEST_REMOTE_ENDPOINT_NOT_WORKING = 'http://www.nosuchserverexist.tld/doesnotexist.endpoint';
     const TEST_REMOTE_WSDL_NOT_WORKING = 'http://www.nosuchserverexist.tld/doesnotexist.endpoint?wsdl';
+
+    private $localWebServerProcess;
+
+    public function setUp()
+    {
+        $this->localWebServerProcess = popen('php -S localhost:8000 > /dev/null 2>&1 &', 'r');
+    }
+
+    public function tearDown()
+    {
+        pclose($this->localWebServerProcess);
+    }
 
     public function testSoapCall()
     {
@@ -233,8 +245,6 @@ class SoapClientTest extends PHPUnit_Framework_TestCase
      */
     public function testSoapCallSwaWithAttachmentsOnResponse()
     {
-        $localWebServerProcess = popen('php -S localhost:9000 > /dev/null 2>&1 &', 'r');
-
         $soapClient = $this->getSoapBuilder()->buildWithSoapHeader(
             SoapClientOptionsBuilder::createWithTracing(),
             SoapOptionsBuilder::createSwaWithClassMapV11(
@@ -265,8 +275,6 @@ class SoapClientTest extends PHPUnit_Framework_TestCase
 
         file_put_contents(self::CACHE_DIR . '/testSoapCallSwaWithAttachmentsOnResponse.xml', $soapResponse->getContent());
         file_put_contents(self::CACHE_DIR . '/testSoapCallSwaWithAttachmentsOnResponse.txt', $firstAttachment->getContent());
-
-        pclose($localWebServerProcess);
     }
 
     public function removeOneTimeData($string)
