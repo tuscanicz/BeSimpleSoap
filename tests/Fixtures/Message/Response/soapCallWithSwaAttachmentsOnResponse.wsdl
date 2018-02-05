@@ -1,0 +1,61 @@
+<?xml version="1.0"?>
+<wsdl:definitions xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns="http://schemas.xmlsoap.org/wsdl/" xmlns:tns="http://schema.testcase" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" targetNamespace="http://schema.testcase">
+    <wsdl:types>
+        <xsd:schema targetNamespace="http://schema.testcase">
+            <xsd:complexType name="SoapHeaderEntity">
+                <xsd:sequence>
+                    <xsd:element name="user" type="xsd:string" minOccurs="1">
+                        <xsd:annotation>
+                            <xsd:documentation>User name for authorization</xsd:documentation>
+                        </xsd:annotation>
+                    </xsd:element>
+                </xsd:sequence>
+            </xsd:complexType>
+            <xsd:element name="SoapHeader" type="tns:SoapHeaderEntity"/>
+            <xsd:complexType name="GenerateTestRequest">
+                <xsd:sequence>
+                    <xsd:element name="salutation" type="xsd:string" minOccurs="0"/>
+                </xsd:sequence>
+            </xsd:complexType>
+            <xsd:complexType name="GenerateTestResponse">
+                <xsd:sequence>
+                    <xsd:element name="fileName" type="xsd:string" minOccurs="1"/>
+                </xsd:sequence>
+            </xsd:complexType>
+        </xsd:schema>
+    </wsdl:types>
+    <message name="SoapHeader">
+        <part name="SoapHeader" element="tns:SoapHeader"/>
+    </message>
+    <message name="GenerateTestRequest">
+        <part name="request" type="tns:GenerateTestRequest"/>
+    </message>
+    <message name="GenerateTestResponse">
+        <part name="generateTestReturn" type="tns:GenerateTestResponse"/>
+    </message>
+    <wsdl:portType name="TestGeneratorServiceSoapPortType">
+        <wsdl:operation name="generateTest">
+            <wsdl:input message="tns:GenerateTestRequest"/>
+            <wsdl:output message="tns:GenerateTestResponse"/>
+        </wsdl:operation>
+    </wsdl:portType>
+    <binding name="TestGeneratorServiceSoapBinding" type="tns:TestGeneratorServiceSoapPortType">
+        <soap:binding style="rpc" transport="http://schemas.xmlsoap.org/soap/http"/>
+        <wsdl:operation name="generateTest">
+            <soap:operation soapAction="TestGeneratorService.generateTest" style="rpc"/>
+            <wsdl:input>
+                <soap:header use="literal" message="tns:SoapHeader" part="SoapHeader" namespace="http://schema.testcase"/>
+                <soap:body use="literal" part="request" namespace="http://schema.testcase"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal" namespace="http://schema.testcase"/>
+            </wsdl:output>
+        </wsdl:operation>
+    </binding>
+    <wsdl:service name="TestGeneratorService">
+        <xsd:documentation>WSDL file for TestGeneratorService</xsd:documentation>
+        <port name="TestGeneratorServiceSoapPortType" binding="tns:TestGeneratorServiceSoapBinding">
+            <soap:address location="http://localhost:8000/tests/SwaEndpoint.php"/>
+        </port>
+    </wsdl:service>
+</wsdl:definitions>

@@ -3,8 +3,6 @@
 namespace BeSimple\SoapClient;
 
 use BeSimple\SoapBundle\Soap\SoapAttachment;
-use BeSimple\SoapClient\Curl\CurlOptions;
-use BeSimple\SoapClient\SoapOptions\SoapClientOptions;
 use BeSimple\SoapCommon\ClassMap;
 use BeSimple\SoapCommon\SoapOptions\SoapOptions;
 use BeSimple\SoapCommon\SoapOptionsBuilder;
@@ -18,11 +16,11 @@ class SoapClientTest extends PHPUnit_Framework_TestCase
 {
     const CACHE_DIR = __DIR__ . '/../../../cache';
     const FIXTURES_DIR = __DIR__ . '/../../Fixtures';
+    const TEST_HTTP_URL = 'http://localhost:9000/tests';
     const TEST_ENDPOINT_UK = 'http://www.webservicex.net/uklocation.asmx';
     const TEST_REMOTE_WSDL_UK = 'http://www.webservicex.net/uklocation.asmx?WSDL';
     const TEST_REMOTE_ENDPOINT_NOT_WORKING = 'http://www.nosuchserverexist.tld/doesnotexist.endpoint';
     const TEST_REMOTE_WSDL_NOT_WORKING = 'http://www.nosuchserverexist.tld/doesnotexist.endpoint?wsdl';
-    const TEST_REMOTE_WSDL_SWA = 'https://demo2815480.mockable.io/soap/testGenerator?WSDL';
 
     public function testSoapCall()
     {
@@ -231,14 +229,16 @@ class SoapClientTest extends PHPUnit_Framework_TestCase
     }
 
     /**
-     * @see This test needs a working SWA endpoint. Examine Tests/Mock directory for details
+     * @see This test needs to start a mock server first
      */
     public function testSoapCallSwaWithAttachmentsOnResponse()
     {
+        $localWebServerProcess = popen('php -S localhost:9000 > /dev/null 2>&1 &', 'r');
+
         $soapClient = $this->getSoapBuilder()->buildWithSoapHeader(
             SoapClientOptionsBuilder::createWithTracing(),
             SoapOptionsBuilder::createSwaWithClassMapV11(
-                self::TEST_REMOTE_WSDL_SWA,
+                self::TEST_HTTP_URL.'/SwaEndpoint.php?wsdl',
                 new ClassMap([
                     'GenerateTestRequest' => GenerateTestRequest::class,
                 ]),
@@ -265,6 +265,8 @@ class SoapClientTest extends PHPUnit_Framework_TestCase
 
         file_put_contents(self::CACHE_DIR . '/testSoapCallSwaWithAttachmentsOnResponse.xml', $soapResponse->getContent());
         file_put_contents(self::CACHE_DIR . '/testSoapCallSwaWithAttachmentsOnResponse.txt', $firstAttachment->getContent());
+
+        pclose($localWebServerProcess);
     }
 
     public function removeOneTimeData($string)
