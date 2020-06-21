@@ -66,10 +66,10 @@ class MultiPart extends PartHeader
         $message = ($withHeaders === true) ? $this->generateHeaders() : "";
         // add parts
         foreach ($this->parts as $part) {
-            $message .= "\n" . '--' . $this->getHeader('Content-Type', 'boundary') . "\n";
+            $message .= "\r\n" . '--' . $this->getHeader('Content-Type', 'boundary') . "\r\n";
             $message .= $part->getMessagePart();
         }
-        $message .= "\n" . '--' . $this->getHeader('Content-Type', 'boundary') . '--';
+        $message .= "\r\n" . '--' . $this->getHeader('Content-Type', 'boundary') . '--';
 
         return $message;
     }
