@@ -1,7 +1,7 @@
 {
-    "name": "tuscanicz/soap",
+    "name": "bohrlot/soap",
     "type": "library",
-    "description": "A largely refactored besimple/soap used to build SOAP and WSDL based web services. This fork fixes a lot of errors and provides better API, robust, stable and modern codebase.",
+    "description": "A fixed version of tuscanicz/soap used to build SOAP and WSDL based web services. This fork fixes a mime error in swa messages",
     "keywords": ["soap", "soap server", "soap client"],
     "license": "MIT",
     "authors": [
@@ -20,6 +20,10 @@
         {
             "name": "Petr Bechyně",
             "email": "mail@petrbechyne.com"
+        },
+        {
+            "name": "Francesco Santoro",
+            "email": "santoro@itacatech.it"
         }
     ],
     "require": {
@@ -38,7 +42,7 @@
     },
     "require-dev": {
         "ext-mcrypt": "*",
-        "mikey179/vfsStream": "~1.0",
+        "mikey179/vfsstream": "~1.0",
         "phpunit/phpunit": "~4.0",
         "phpstan/phpstan": "dev-master",
         "phing/phing": "^2.16",
@@ -61,7 +65,7 @@
     "repositories": [
         {
             "type": "vcs",
-            "url": "https://github.com/tuscanicz/phpstan.git"
+            "url": "https://github.com/bohrlot/BeSimpleSoap"
         }
     ]
 }
